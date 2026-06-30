@@ -47,10 +47,14 @@ const input: SimulationInput = {
 };
 
 describe("maxTaxSavingConfig", () => {
-  it("iDeCo+合計23,000・小規模70,000を上限投入し、社宅等は踏襲", () => {
-    const c = maxTaxSavingConfig({ ...input.taxSaving, companyHousingEnabled: true, monthlyRent: 150_000 });
+  it("iDeCo+合計を上限(62,000)・小規模70,000を上限投入し、社宅等は踏襲", () => {
+    const c = maxTaxSavingConfig(
+      { ...input.taxSaving, companyHousingEnabled: true, monthlyRent: 150_000 },
+      62_000,
+    );
     expect(c.idecoPlusEnabled).toBe(true);
-    expect(c.idecoPlusCompanyMonthly + c.idecoPlusPersonalMonthly).toBe(23_000);
+    expect(c.idecoPlusCompanyMonthly + c.idecoPlusPersonalMonthly).toBe(62_000);
+    expect(c.idecoPlusPersonalMonthly).toBe(1_000); // 加入者は最低1,000円
     expect(c.smallBusinessMutualMonthly).toBe(70_000);
     expect(c.companyHousingEnabled).toBe(true); // タブ値を踏襲
     expect(c.monthlyRent).toBe(150_000);

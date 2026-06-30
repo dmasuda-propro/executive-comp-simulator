@@ -1,5 +1,6 @@
 import type { SimulationInput, TaxSavingInput } from "@/types/input";
 import type { CaseResult } from "@/types/result";
+import { getRateMaster } from "@/lib/constants/rateMaster";
 import { simulateCorporateCase, simulateEmployeeCase } from "./simulator";
 
 // 一致させる手取り/資産の指標
@@ -7,14 +8,17 @@ export type SolveMetric = "futureAssetNet" | "effectiveNet" | "cashNet";
 
 const pick = (c: CaseResult, metric: SolveMetric): number => c[metric];
 
-// 「節税フル活用」: iDeCo+合計23,000円/月(会社22,000+個人1,000)・小規模70,000円/月を上限投入。
+// 「節税フル活用」: iDeCo+を合計上限まで(加入者1,000円+残りを事業主掛金)・小規模70,000円/月を上限投入。
 // 社宅・出張旅費・経営セーフティ共済・生命保険は現在のタブ値を踏襲。
-export function maxTaxSavingConfig(base: TaxSavingInput): TaxSavingInput {
+export function maxTaxSavingConfig(
+  base: TaxSavingInput,
+  idecoPlusMax: number,
+): TaxSavingInput {
   return {
     ...base,
     idecoPlusEnabled: true,
-    idecoPlusCompanyMonthly: 22_000,
-    idecoPlusPersonalMonthly: 1_000,
+    idecoPlusPersonalMonthly: 1_000, // 加入者掛金は最低1,000円
+    idecoPlusCompanyMonthly: Math.max(0, idecoPlusMax - 1_000), // 残りを全額損金の事業主掛金に
     smallBusinessMutualMonthly: 70_000,
   };
 }
@@ -42,7 +46,8 @@ export function solveDirectorSalaryForTakeHome(
   const metric = opts?.metric ?? "futureAssetNet";
   const maxMonthly = opts?.maxMonthly ?? 10_000_000;
   const unit = opts?.unit ?? 1_000;
-  const taxSaving = maxTaxSavingConfig(input.taxSaving);
+  const idecoPlusMax = getRateMaster(input.basic.simulationYear).idecoPlus.monthlyMax;
+  const taxSaving = maxTaxSavingConfig(input.taxSaving, idecoPlusMax);
 
   const employee = simulateEmployeeCase(input);
   const targetValue = pick(employee, metric);

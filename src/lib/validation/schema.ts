@@ -54,9 +54,10 @@ const taxSaving = z
   })
   .superRefine((v, ctx) => {
     if (!v.idecoPlusEnabled) return;
+    // 令和7改正後の上限62,000円(2026年12月施行)。
     const total = v.idecoPlusCompanyMonthly + v.idecoPlusPersonalMonthly;
-    if (total > 23000)
-      ctx.addIssue({ code: "custom", message: "iDeCo+合計は月額23,000円以下" });
+    if (total > 62000)
+      ctx.addIssue({ code: "custom", message: "iDeCo+合計は月額62,000円以下" });
     if (total > 0 && total < 5000)
       ctx.addIssue({ code: "custom", message: "iDeCo+合計は月額5,000円以上" });
     if (v.idecoPlusCompanyMonthly % 1000 !== 0 || v.idecoPlusPersonalMonthly % 1000 !== 0)

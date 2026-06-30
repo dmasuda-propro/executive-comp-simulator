@@ -38,6 +38,11 @@ export type RateMaster = {
   corporate: {
     perCapitaTax: number; // 法人住民税 均等割(赤字でも発生する固定額)
   };
+  idecoPlus: {
+    monthlyMin: number; // 合計掛金の月額下限
+    monthlyMax: number; // 合計掛金の月額上限(事業主+加入者)
+    unit: number; // 拠出単位
+  };
   deductions: {
     salaryDeduction: (salaryIncome: number) => number; // 給与所得控除
     basicDeduction: (totalIncome: number) => number; // 所得税 基礎控除(令和8年分)

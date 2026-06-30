@@ -109,6 +109,9 @@ export const rateMaster2026: RateMaster = {
   residentTax: { rate: 0.1, perCapita: 5_000, basicDeduction: residentBasicDeduction },
   // 法人住民税 均等割(東京23区・資本金1000万以下・従業員50人以下の標準。赤字でも発生)
   corporate: { perCapitaTax: 70_000 },
+  // iDeCo+(中小事業主掛金)合計上限。令和7改正で23,000→62,000円(2026年12月1日施行・政令441号)。
+  // 出典: 厚労省/令和7年度税制改正。下限5,000円・1,000円単位は従来どおり。
+  idecoPlus: { monthlyMin: 5_000, monthlyMax: 62_000, unit: 1_000 },
   deductions: {
     salaryDeduction,
     basicDeduction,

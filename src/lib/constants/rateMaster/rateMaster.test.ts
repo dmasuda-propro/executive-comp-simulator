@@ -54,4 +54,9 @@ describe("getRateMaster", () => {
   it("法人住民税 均等割が定義されている", () => {
     expect(m.corporate.perCapitaTax).toBe(70_000);
   });
+  it("iDeCo+の上限は令和7改正後の62,000円", () => {
+    expect(m.idecoPlus.monthlyMax).toBe(62_000);
+    expect(m.idecoPlus.monthlyMin).toBe(5_000);
+    expect(m.idecoPlus.unit).toBe(1_000);
+  });
 });

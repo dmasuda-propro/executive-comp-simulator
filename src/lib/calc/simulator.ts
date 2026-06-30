@@ -162,6 +162,7 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
     validateIdecoPlus(
       taxSaving.idecoPlusCompanyMonthly,
       taxSaving.idecoPlusPersonalMonthly,
+      basic.simulationYear,
     );
 
   const ts = calcTaxSaving(taxSaving);

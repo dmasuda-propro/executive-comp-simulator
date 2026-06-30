@@ -11,17 +11,29 @@ describe("simulationSchema", () => {
     };
     expect(simulationSchema.safeParse(bad).success).toBe(false);
   });
-  it("iDeCo+ 合計>23000 fails", () => {
+  it("iDeCo+ 合計>62000 fails", () => {
     const bad = {
       ...defaultInput,
       taxSaving: {
         ...defaultInput.taxSaving,
         idecoPlusEnabled: true,
-        idecoPlusCompanyMonthly: 20000,
+        idecoPlusCompanyMonthly: 61000,
         idecoPlusPersonalMonthly: 5000,
       },
     };
     expect(simulationSchema.safeParse(bad).success).toBe(false);
+  });
+  it("iDeCo+ 合計=62000 は許容", () => {
+    const ok = {
+      ...defaultInput,
+      taxSaving: {
+        ...defaultInput.taxSaving,
+        idecoPlusEnabled: true,
+        idecoPlusCompanyMonthly: 61000,
+        idecoPlusPersonalMonthly: 1000,
+      },
+    };
+    expect(simulationSchema.safeParse(ok).success).toBe(true);
   });
   it("smallBusinessMutualMonthly>70000 fails", () => {
     const bad = {

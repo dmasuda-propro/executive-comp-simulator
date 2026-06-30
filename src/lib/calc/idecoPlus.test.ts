@@ -2,13 +2,17 @@ import { describe, it, expect } from "vitest";
 import { calcIdecoPlus, validateIdecoPlus } from "./idecoPlus";
 
 describe("validateIdecoPlus", () => {
-  it("合計23,000超で例外", () =>
-    expect(() => validateIdecoPlus(20_000, 5_000)).toThrow());
+  it("合計62,000超で例外(令和7改正後の上限)", () =>
+    expect(() => validateIdecoPlus(61_000, 5_000, 2026)).toThrow());
+  it("23,000は許容(旧上限は通る)", () =>
+    expect(() => validateIdecoPlus(22_000, 1_000, 2026)).not.toThrow());
+  it("62,000ちょうどは許容", () =>
+    expect(() => validateIdecoPlus(61_000, 1_000, 2026)).not.toThrow());
   it("0〜5,000未満で例外", () =>
-    expect(() => validateIdecoPlus(0, 3_000)).toThrow());
+    expect(() => validateIdecoPlus(0, 3_000, 2026)).toThrow());
   it("1,000円単位でない場合例外", () =>
-    expect(() => validateIdecoPlus(5_500, 0)).toThrow());
-  it("0+0は許容", () => expect(() => validateIdecoPlus(0, 0)).not.toThrow());
+    expect(() => validateIdecoPlus(5_500, 0, 2026)).toThrow());
+  it("0+0は許容", () => expect(() => validateIdecoPlus(0, 0, 2026)).not.toThrow());
 });
 
 describe("calcIdecoPlus", () => {
