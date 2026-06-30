@@ -1,11 +1,16 @@
 import type { RateMaster, StandardRemunerationGrade } from "./types";
 
-// 出典前提(概算・令和8年分想定):
-//   協会けんぽ東京 2026 = 健保 9.85% / 子育て支援金 0.23% / 介護 1.62% / 厚年 18.3%
-//   給与所得控除は令和7年改正後(最低保障 65 万)。
-//   基礎控除は令和7年改正の令和7・8年分上乗せ特例を反映。
-//   所得税率は超過累進(現行)。住民税 所得割 10%・基礎控除 43 万・均等割 5,000 円(森林環境税含む)。
-// 正式値確定後はこのファイルを差し替える。
+// 出典(令和8年分・2026年):
+//   協会けんぽ東京 令和8年度 = 健保 9.85% / 子ども・子育て支援金 0.23%(健保と別建てだが本人折半対象) / 介護 1.62% / 厚年 18.3%
+//     出典: 協会けんぽ 令和8年度 東京支部 保険料額表 https://www.kyoukaikenpo.or.jp/assets/R8_13tokyo.pdf
+//   給与所得控除・基礎控除は「令和8年度税制改正」(令和7年12月閣議決定)反映の令和8・9年分の確定値。
+//     基礎控除: 合計所得 132万以下/〜336万/〜489万=104万, 〜655万=67万, 〜2,350万=62万 (本則62万+租特法加算)
+//     給与所得控除: 最低保障 74万(収入220万以下)。220万超の控除額は改正なし。
+//     出典: 国税庁「令和8年4月 源泉所得税の改正のあらまし」 https://www.nta.go.jp/publication/pamph/gensen/2026kaisei.pdf
+//          国税庁 特設 https://www.nta.go.jp/users/gensen/2026kiso/index.htm
+//   所得税率は超過累進(現行)・復興特別所得税2.1%(2026年。2027年〜は復興1.1%+防衛1.0%)。
+//   住民税 所得割 10%・基礎控除 43 万(令和8年度据置)・均等割 5,000 円(市3,000+道府県1,000+森林環境税1,000)。
+// 注意: 令和10年分以後は基礎控除・給与所得控除が再改定される(物価スライド)。年度マスタを追加すること。
 
 // 健康保険 標準報酬月額(区分の代表値・固定値)。
 const STANDARD_MONTHLY: number[] = [
@@ -34,23 +39,24 @@ const grades: StandardRemunerationGrade[] = STANDARD_MONTHLY.map((sm, i) => ({
   standardMonthly: sm,
 }));
 
-// 給与所得控除(令和7年改正後・最低保障65万)
+// 給与所得控除(令和8年度改正後・令和8/9年分・最低保障74万)
 const salaryDeduction = (income: number): number => {
-  if (income <= 1_900_000) return Math.min(income, 650_000);
+  if (income <= 2_200_000) return Math.min(income, 740_000);
   if (income <= 3_600_000) return income * 0.3 + 80_000;
   if (income <= 6_600_000) return income * 0.2 + 440_000;
   if (income <= 8_500_000) return income * 0.1 + 1_100_000;
   return 1_950_000;
 };
 
-// 所得税 基礎控除(令和7改正・令和7,8年分の上乗せ特例を反映, 合計所得金額ベース)
+// 所得税 基礎控除(令和8年度改正後・令和8/9年分の確定値, 合計所得金額ベース)
+// 本則62万 + 租特法加算(令和8・9年分: 合計所得489万以下=+42万→104万, 489万超655万以下=+5万→67万)
 const basicDeduction = (totalIncome: number): number => {
-  if (totalIncome <= 1_320_000) return 950_000;
-  if (totalIncome <= 3_360_000) return 880_000;
-  if (totalIncome <= 4_890_000) return 680_000;
-  if (totalIncome <= 6_550_000) return 630_000;
-  if (totalIncome <= 23_500_000) return 580_000;
-  if (totalIncome <= 24_000_000) return 480_000;
+  if (totalIncome <= 1_320_000) return 1_040_000;
+  if (totalIncome <= 3_360_000) return 1_040_000;
+  if (totalIncome <= 4_890_000) return 1_040_000;
+  if (totalIncome <= 6_550_000) return 670_000;
+  if (totalIncome <= 23_500_000) return 620_000;
+  if (totalIncome <= 24_000_000) return 480_000; // 2,350万超は改正なし
   if (totalIncome <= 24_500_000) return 320_000;
   if (totalIncome <= 25_000_000) return 160_000;
   return 0;
