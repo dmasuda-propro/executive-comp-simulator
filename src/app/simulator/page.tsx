@@ -12,13 +12,6 @@ import { EmployeeForm } from "@/components/forms/EmployeeForm";
 import { CorporateForm } from "@/components/forms/CorporateForm";
 import { DirectorPayForm } from "@/components/forms/DirectorPayForm";
 import { TaxSavingForm } from "@/components/forms/TaxSavingForm";
-import { SummaryCards } from "@/components/results/SummaryCards";
-import { ComparisonTable } from "@/components/results/ComparisonTable";
-import { CashflowChart } from "@/components/results/CashflowChart";
-import { TaxBreakdown } from "@/components/results/TaxBreakdown";
-import { TakeHomeTiers, SavingsEffect } from "@/components/results/SavingsEffect";
-import { OptimizationRanking } from "@/components/results/OptimizationRanking";
-import { ReverseSolver } from "@/components/results/ReverseSolver";
 import { Disclaimer } from "@/components/Disclaimer";
 
 const TABS = [
@@ -118,40 +111,6 @@ export default function SimulatorPage() {
             <>
               <IncomeBreakdown employee={result.employee} corporate={corpFull} />
               <CompanyCostComparison employee={result.employee} corporate={corpFull} />
-              <SummaryCards result={result} />
-
-              <section className="rounded-xl border border-gray-200 bg-white p-4">
-                <h2 className="mb-2 font-semibold">比較表</h2>
-                <ComparisonTable result={result} />
-              </section>
-
-              <section className="grid gap-4 md:grid-cols-2">
-                <TakeHomeTiers result={result.corporate} />
-                <SavingsEffect result={result.corporate} />
-              </section>
-
-              <section className="grid gap-6 rounded-xl border border-gray-200 bg-white p-4 md:grid-cols-2">
-                <div>
-                  <h2 className="mb-2 font-semibold">会社員 vs 法人（合計の構成）</h2>
-                  <CashflowChart result={result} />
-                </div>
-                <div>
-                  <h2 className="mb-2 font-semibold">法人役員の負担内訳</h2>
-                  <TaxBreakdown result={result.corporate} />
-                </div>
-              </section>
-
-              <section className="rounded-xl border border-gray-200 bg-white p-4">
-                <h2 className="mb-2 font-semibold">
-                  採用オファー逆算：現職の総資産と同等にする役員報酬（額面比較・節税フル活用）
-                </h2>
-                <ReverseSolver />
-              </section>
-
-              <section className="rounded-xl border border-gray-200 bg-white p-4">
-                <h2 className="mb-2 font-semibold">最適報酬パターン（総当たり上位20）</h2>
-                <OptimizationRanking />
-              </section>
             </>
           )}
           <Disclaimer />
