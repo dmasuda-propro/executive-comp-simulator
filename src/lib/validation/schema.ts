@@ -81,8 +81,8 @@ export const defaultInput: SimulationInput = {
     simulationYear: 2026,
   },
   employee: {
-    annualSalary: 10_800_000,
-    monthlySalary: 650_000,
+    annualSalary: 11_400_000,
+    monthlySalary: 700_000,
     annualBonus: 3_000_000,
     bonusCount: 2,
     rentSubsidyAnnual: 0,
