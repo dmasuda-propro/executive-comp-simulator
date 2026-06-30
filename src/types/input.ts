@@ -58,6 +58,12 @@ export type MicroSchemeInput = {
   contractRevenueAnnual: number; // 業務委託の年間報酬(本業)
   contractExpensesAnnual: number; // 業務委託の経費
   microMonthlySalary: number; // マイクロ法人の役員報酬(月)。社保最低化のため既定55,000
+  smallBusinessMutualMonthly: number; // 小規模企業共済(月)。全額所得控除
+  idecoMonthly: number; // iDeCo個人掛金(月)。全額所得控除(第2号・企業年金なし上限62,000)
+  consumptionTaxEnabled: boolean; // 消費税(簡易課税)を課すか
+  consumptionTaxRate: number; // 対売上の実効率。簡易課税サービス業(第5種)=5%
+  businessTaxEnabled: boolean; // 個人事業税を課すか
+  businessTaxRate: number; // 個人事業税率。標準5%(請負業・コンサル等)
 };
 
 export type SimulationInput = {

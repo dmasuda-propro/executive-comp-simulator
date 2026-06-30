@@ -71,6 +71,12 @@ const microScheme = z.object({
   contractRevenueAnnual: z.number().min(0),
   contractExpensesAnnual: z.number().min(0),
   microMonthlySalary: z.number().min(0),
+  smallBusinessMutualMonthly: z.number().min(0).max(70000),
+  idecoMonthly: z.number().min(0).max(62000),
+  consumptionTaxEnabled: z.boolean(),
+  consumptionTaxRate: z.number().min(0).max(1),
+  businessTaxEnabled: z.boolean(),
+  businessTaxRate: z.number().min(0).max(1),
 });
 
 export const simulationSchema = z.object({
@@ -129,5 +135,11 @@ export const defaultInput: SimulationInput = {
     contractRevenueAnnual: 8_060_000,
     contractExpensesAnnual: 0,
     microMonthlySalary: 55_000,
+    smallBusinessMutualMonthly: 70_000,
+    idecoMonthly: 0,
+    consumptionTaxEnabled: true,
+    consumptionTaxRate: 0.05,
+    businessTaxEnabled: true,
+    businessTaxRate: 0.05,
   },
 };

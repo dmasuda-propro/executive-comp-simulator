@@ -51,6 +51,12 @@ const input: SimulationInput = {
     contractRevenueAnnual: 8_060_000,
     contractExpensesAnnual: 0,
     microMonthlySalary: 55_000,
+    smallBusinessMutualMonthly: 0,
+    idecoMonthly: 0,
+    consumptionTaxEnabled: false,
+    consumptionTaxRate: 0.05,
+    businessTaxEnabled: false,
+    businessTaxRate: 0.05,
   },
 };
 
@@ -131,6 +137,12 @@ describe("simulateMicroSchemeCase (マイクロ法人＋業務委託)", () => {
       contractRevenueAnnual: 8_000_000,
       contractExpensesAnnual: 0,
       microMonthlySalary: 55_000,
+      smallBusinessMutualMonthly: 0,
+      idecoMonthly: 0,
+      consumptionTaxEnabled: false,
+      consumptionTaxRate: 0.05,
+      businessTaxEnabled: false,
+      businessTaxRate: 0.05,
     },
   };
   const r = simulateMicroSchemeCase(micro);
@@ -157,5 +169,44 @@ describe("simulateMicroSchemeCase (マイクロ法人＋業務委託)", () => {
   it("社保最低化で法人役員より社会保険料(本人)が小さい", () => {
     const corp = simulate(micro).corporate;
     expect(r.social.annualEmployee).toBeLessThan(corp.social.annualEmployee);
+  });
+});
+
+describe("マイクロ法人: 消費税・個人事業税・小規模を含む全ブリッジ", () => {
+  const m = {
+    ...input,
+    microScheme: {
+      contractRevenueAnnual: 8_000_000,
+      contractExpensesAnnual: 0,
+      microMonthlySalary: 55_000,
+      smallBusinessMutualMonthly: 70_000,
+      idecoMonthly: 0,
+      consumptionTaxEnabled: true,
+      consumptionTaxRate: 0.05,
+      businessTaxEnabled: true,
+      businessTaxRate: 0.05,
+    },
+  };
+  const r = simulateMicroSchemeCase(m);
+  it("消費税=売上×5%、個人事業税=(売上−消費税−290万)×5%", () => {
+    expect(r.consumptionTaxAnnual).toBe(400_000); // 8,000,000×5%
+    // businessBeforeBlue = 8,000,000 − 400,000 = 7,600,000 → (7,600,000−2,900,000)×5%=235,000
+    expect(r.businessTaxAnnual).toBe(235_000);
+  });
+  it("会社の仕入税額控除は10%(本則)", () => {
+    expect(r.companyConsumptionTaxCredit).toBe(800_000); // 8,000,000×10%
+  });
+  it("全ブリッジ一致: 額面−経費−消費税−事業税−社保−所得税−住民税−小規模−iDeCo=現金手取り", () => {
+    expect(
+      r.salaryIncome -
+        r.businessExpenseAnnual -
+        r.consumptionTaxAnnual -
+        r.businessTaxAnnual -
+        r.social.annualEmployee -
+        r.incomeTax.total -
+        r.residentTax.total -
+        r.taxSaving.smallBusinessMutualAnnual -
+        r.ideco.personalAnnual,
+    ).toBe(r.cashNet);
   });
 });

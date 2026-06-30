@@ -6,6 +6,8 @@ type RowDef = { label: string; f: (c: CaseResult) => number };
 
 const ROWS: RowDef[] = [
   { label: "額面・業務委託費", f: (c) => c.companyBaseCost },
+  { label: "支払消費税（10%）", f: (c) => c.companyConsumptionTaxCredit },
+  { label: "消費税 仕入税額控除（10%）", f: (c) => -c.companyConsumptionTaxCredit },
   { label: "会社負担 社会保険料", f: (c) => (c.employerBearsSocial ? c.social.annualCompany : 0) },
   { label: "iDeCo+ 会社掛金", f: (c) => c.ideco.companyAnnual },
   { label: "社宅（会社負担家賃）", f: (c) => c.taxSaving.companyPaidRentAnnual },
@@ -22,7 +24,7 @@ export function CompanyCostComparison({ cases }: { cases: BreakdownCase[] }) {
     <div className="rounded-xl border border-gray-200 bg-white p-4">
       <h2 className="mb-1 font-semibold">会社の支出比較（年間・3案）</h2>
       <p className="mb-2 text-xs text-gray-500">
-        各案で会社が支払う総額（額面／業務委託費＋会社負担社保＋会社負担の節税策）。業務委託は雇用でないため会社負担社保はなく、マイクロ法人側（売上80万）は別管理で含みません。
+        各案で会社が支払う総額（額面／業務委託費＋会社負担社保＋会社負担の節税策）。業務委託は雇用でないため会社負担社保はなく、支払消費税(10%)は本則課税で仕入税額控除でき実質負担なし。マイクロ法人側（売上80万）は別管理で含みません。
       </p>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">

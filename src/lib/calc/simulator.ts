@@ -136,6 +136,9 @@ export function simulateEmployeeCase(input: SimulationInput): CaseResult {
     baseSalaryAnnual: employee.monthlySalary * 12 + employee.rentSubsidyAnnual,
     bonusAnnual: employee.annualBonus,
     businessExpenseAnnual: 0,
+    consumptionTaxAnnual: 0,
+    businessTaxAnnual: 0,
+    companyConsumptionTaxCredit: 0,
     companyBaseCost: salaryIncome,
     employerBearsSocial: true,
     employmentIncome,
@@ -248,6 +251,9 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
     baseSalaryAnnual: directorSalaryAnnual,
     bonusAnnual: fixedBonusAnnual,
     businessExpenseAnnual: 0,
+    consumptionTaxAnnual: 0,
+    businessTaxAnnual: 0,
+    companyConsumptionTaxCredit: 0,
     companyBaseCost: salaryIncome,
     employerBearsSocial: true,
     employmentIncome,
@@ -277,13 +283,24 @@ export function simulateMicroSchemeCase(input: SimulationInput): CaseResult {
   const rev = microScheme.contractRevenueAnnual;
   const exp = microScheme.contractExpensesAnnual;
   const microSalaryAnnual = microScheme.microMonthlySalary * 12;
+  const idecoPersonalAnnual = microScheme.idecoMonthly * 12;
+  const smallBizAnnual = microScheme.smallBusinessMutualMonthly * 12;
+  // 消費税(簡易課税・サービス業=売上×5%)。租税公課として事業所得の経費にもなる。
+  const consumptionTax = microScheme.consumptionTaxEnabled
+    ? Math.floor(rev * microScheme.consumptionTaxRate)
+    : 0;
 
   // マイクロ法人の給与所得(給与所得控除後)。役員報酬が控除額未満なら0
   const microEmploymentIncome = calcEmploymentIncome(microSalaryAnnual, year).employmentIncome;
-  // 事業所得(業務委託): 青色申告特別控除65万(控除前所得の範囲で)
-  const blueDeduction = Math.min(650_000, Math.max(0, rev - exp));
-  const businessIncome = Math.max(0, rev - exp - blueDeduction);
+  // 事業所得(業務委託): 収入 − 経費 − 消費税(租税公課) − 青色申告特別控除65万
+  const businessBeforeBlue = Math.max(0, rev - exp - consumptionTax);
+  const blueDeduction = Math.min(650_000, businessBeforeBlue);
+  const businessIncome = businessBeforeBlue - blueDeduction;
   const totalIncome = businessIncome + microEmploymentIncome; // 合計所得金額
+  // 個人事業税: (事業所得 + 青色控除戻し − 事業主控除290万) × 率。青色は加算戻し=businessBeforeBlue基準。
+  const businessTax = microScheme.businessTaxEnabled
+    ? Math.floor(Math.max(0, businessBeforeBlue - 2_900_000) * microScheme.businessTaxRate)
+    : 0;
 
   // 社会保険は最低等級(マイクロ法人の役員報酬ベース・賞与なし)
   const monthly = calcMonthlySocialInsurance({
@@ -306,8 +323,8 @@ export function simulateMicroSchemeCase(input: SimulationInput): CaseResult {
   const taxArgs = {
     employmentIncome: totalIncome, // 合計所得金額として税額計算
     socialInsurance: social.annualEmployee,
-    idecoPersonalAnnual: 0,
-    smallBusinessMutualAnnual: 0,
+    idecoPersonalAnnual, // 小規模企業共済等掛金控除(全額所得控除)
+    smallBusinessMutualAnnual: smallBizAnnual,
     spouseDeduction: basic.spouseDeduction,
     dependents: basic.dependents,
     disabilityGeneral: basic.disabilityGeneral,
@@ -320,7 +337,15 @@ export function simulateMicroSchemeCase(input: SimulationInput): CaseResult {
 
   const grossReceived = rev + microSalaryAnnual; // 額面(本業報酬＋マイクロ法人役員報酬)
   const cashNet =
-    grossReceived - exp - social.annualEmployee - incomeTax.total - residentTax.total;
+    grossReceived -
+    exp -
+    consumptionTax -
+    businessTax -
+    social.annualEmployee -
+    incomeTax.total -
+    residentTax.total -
+    idecoPersonalAnnual -
+    smallBizAnnual;
 
   return {
     label: "マイクロ法人＋業務委託",
@@ -328,18 +353,22 @@ export function simulateMicroSchemeCase(input: SimulationInput): CaseResult {
     baseSalaryAnnual: rev,
     bonusAnnual: microSalaryAnnual,
     businessExpenseAnnual: exp,
-    companyBaseCost: rev, // 自社が支払う業務委託費のみ
+    consumptionTaxAnnual: consumptionTax,
+    businessTaxAnnual: businessTax,
+    // 自社は本則課税で業務委託費の消費税10%を仕入税額控除できる(本人の簡易課税5%とは別)
+    companyConsumptionTaxCredit: microScheme.consumptionTaxEnabled ? Math.floor(rev * 0.1) : 0,
+    companyBaseCost: rev, // 自社が支払う業務委託費(税抜)
     employerBearsSocial: false, // 雇用でないため会社負担社保なし
     employmentIncome: totalIncome,
     social,
     incomeTax,
     residentTax,
-    ideco: emptyIdeco,
-    taxSaving: emptyTaxSaving,
+    ideco: { ...emptyIdeco, personalAnnual: idecoPersonalAnnual },
+    taxSaving: { ...emptyTaxSaving, smallBusinessMutualAnnual: smallBizAnnual },
     cashNet,
     effectiveNet: cashNet,
-    futureAssetNet: cashNet,
-    totalOwnerCash: cashNet,
+    futureAssetNet: cashNet + idecoPersonalAnnual + smallBizAnnual,
+    totalOwnerCash: cashNet + idecoPersonalAnnual + smallBizAnnual,
   };
 }
 

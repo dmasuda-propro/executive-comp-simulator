@@ -49,6 +49,9 @@ export type CaseResult = {
   baseSalaryAnnual: number; // 月給・役員報酬の年額(業務委託は本業報酬)
   bonusAnnual: number; // 賞与・事前確定届出給与(業務委託はマイクロ法人役員報酬)
   businessExpenseAnnual: number; // 業務委託の経費(給与ケースは0)
+  consumptionTaxAnnual: number; // 消費税(業務委託の簡易課税、給与ケースは0)
+  businessTaxAnnual: number; // 個人事業税(業務委託、給与ケースは0)
+  companyConsumptionTaxCredit: number; // 自社が業務委託費に支払い仕入税額控除できる消費税(本則10%)
   companyBaseCost: number; // 自社が支払う基本額(給与/役員報酬の額面、業務委託は業務委託費)
   employerBearsSocial: boolean; // 自社が会社負担社保を負うか(業務委託はfalse)
   employmentIncome: number; // 給与所得(給与所得控除後)。業務委託は合計所得金額

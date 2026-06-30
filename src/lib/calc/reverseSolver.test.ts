@@ -56,6 +56,12 @@ const input: SimulationInput = {
     contractRevenueAnnual: 8_060_000,
     contractExpensesAnnual: 0,
     microMonthlySalary: 55_000,
+    smallBusinessMutualMonthly: 0,
+    idecoMonthly: 0,
+    consumptionTaxEnabled: false,
+    consumptionTaxRate: 0.05,
+    businessTaxEnabled: false,
+    businessTaxRate: 0.05,
   },
 };
 

@@ -11,6 +11,8 @@ const ROWS: RowDef[] = [
   { label: "賞与・役員報酬（賞与／マイクロ法人）", kind: "detail", f: (c) => c.bonusAnnual },
   { label: "額面 合計", kind: "subtotal", f: (c) => c.salaryIncome },
   { label: "経費（業務委託）", kind: "minus", f: (c) => c.businessExpenseAnnual },
+  { label: "消費税（簡易課税）", kind: "minus", f: (c) => c.consumptionTaxAnnual },
+  { label: "個人事業税", kind: "minus", f: (c) => c.businessTaxAnnual },
   { label: "社会保険料（本人）", kind: "minus", f: (c) => c.social.annualEmployee },
   { label: "所得税", kind: "minus", f: (c) => c.incomeTax.total },
   { label: "住民税", kind: "minus", f: (c) => c.residentTax.total },
@@ -82,7 +84,7 @@ export function IncomeBreakdown({ cases }: { cases: BreakdownCase[] }) {
         </table>
       </div>
       <p className="mt-2 text-[11px] text-gray-400">
-        ※ 額面 −（経費＋社保＋所得税＋住民税＋小規模・iDeCo個人掛金）＝現金手取り。＋（社宅・出張旅費・小規模・iDeCo＋）＝将来資産込み総資産。業務委託は青色申告特別控除65万円（税額に反映・現金には影響なし）。法人残・マイクロ法人の利益は含みません。
+        ※ 額面 −（経費＋消費税＋個人事業税＋社保＋所得税＋住民税＋小規模・iDeCo個人掛金）＝現金手取り。＋（社宅・出張旅費・小規模・iDeCo＋）＝将来資産込み総資産。業務委託は青色申告特別控除65万円（税額に反映・現金には影響なし）。消費税は簡易課税サービス業5%、個人事業税は事業主控除290万後5%。法人残・マイクロ法人の利益は含みません。
       </p>
     </div>
   );
