@@ -17,7 +17,6 @@ export function TaxSavingForm() {
       <NumberField label="iDeCo+会社分(月)" value={t.idecoPlusCompanyMonthly} onChange={(v) => patch({ idecoPlusCompanyMonthly: v })} />
       <NumberField label="iDeCo+個人分(月)" value={t.idecoPlusPersonalMonthly} hint="会社分＋個人分の合計は月5,000〜62,000円（令和7改正・2026年12月施行）" onChange={(v) => patch({ idecoPlusPersonalMonthly: v })} />
       <NumberField label="小規模企業共済(月)" value={t.smallBusinessMutualMonthly} onChange={(v) => patch({ smallBusinessMutualMonthly: v })} />
-      <NumberField label="経営セーフティ共済(年)" value={t.businessSafetyMutualAnnual} onChange={(v) => patch({ businessSafetyMutualAnnual: v })} />
       <CheckField label="出張旅費を利用" checked={t.travelAllowanceEnabled} onChange={(v) => patch({ travelAllowanceEnabled: v })} />
       <NumberField label="出張日数(月)" value={t.travelDaysPerMonth} step={1} onChange={(v) => patch({ travelDaysPerMonth: v })} />
       <NumberField label="日当(円/日)" value={t.travelAllowancePerDay} onChange={(v) => patch({ travelAllowancePerDay: v })} />

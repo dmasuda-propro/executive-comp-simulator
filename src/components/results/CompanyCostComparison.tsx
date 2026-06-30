@@ -23,7 +23,6 @@ export function CompanyCostComparison({
     { ...both((c) => c.ideco.companyAnnual), label: "iDeCo+ 会社掛金" },
     { ...both((c) => c.taxSaving.companyPaidRentAnnual), label: "社宅（会社負担家賃）" },
     { ...both((c) => c.taxSaving.travelAllowanceAnnual), label: "出張旅費・日当" },
-    { ...both((c) => c.taxSaving.businessSafetyMutualAnnual), label: "経営セーフティ共済" },
   ];
   const rows = items.filter((r) => r.always || r.emp !== 0 || r.corp !== 0);
 
@@ -73,7 +72,7 @@ export function CompanyCostComparison({
         </span>
       </div>
       <p className="mt-2 text-[11px] text-gray-400">
-        ※ 役員報酬・会社負担社保・節税策（社宅・旅費・iDeCo+会社掛金・経営セーフティ共済）はいずれも法人の損金（法人税が下がる）。実際の純コストはこの支出から法人税減少分を差し引いた額に近くなります。
+        ※ 役員報酬・会社負担社保・節税策（社宅・旅費・iDeCo+会社掛金）はいずれも法人の損金（法人税が下がる）。実際の純コストはこの支出から法人税減少分を差し引いた額に近くなります。
       </p>
     </div>
   );
