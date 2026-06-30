@@ -12,6 +12,9 @@ export type BasicInput = {
   hasCareInsurance: boolean; // 自動判定 (40<=age<65) を保持
   dependents: Dependents; // 扶養親族(区分別人数)
   spouseDeduction: boolean; // 配偶者控除(一般38万)を適用するか
+  disabilityGeneral: number; // 一般障害者の人数(本人・配偶者・扶養親族)
+  disabilitySpecial: number; // 特別障害者の人数
+  medicalExpenseAnnual: number; // 年間の医療費(自己負担額)
   simulationYear: number; // 2026
 };
 

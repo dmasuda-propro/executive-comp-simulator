@@ -2,7 +2,11 @@ import { getRateMaster } from "@/lib/constants/rateMaster";
 import { D } from "@/lib/utils/money";
 import type { Dependents } from "@/types/input";
 import type { ResidentTaxResult } from "@/types/result";
-import { dependentDeductionTotal } from "./incomeTax";
+import {
+  dependentDeductionTotal,
+  disabilityDeductionTotal,
+  medicalDeduction,
+} from "./incomeTax";
 
 export function calcResidentTax(params: {
   employmentIncome: number;
@@ -11,6 +15,9 @@ export function calcResidentTax(params: {
   smallBusinessMutualAnnual: number;
   spouseDeduction: boolean;
   dependents: Dependents;
+  disabilityGeneral: number;
+  disabilitySpecial: number;
+  medicalExpenseAnnual: number;
   year: number;
 }): ResidentTaxResult {
   const m = getRateMaster(params.year);
@@ -22,7 +29,9 @@ export function calcResidentTax(params: {
     params.idecoPersonalAnnual +
     params.smallBusinessMutualAnnual +
     (params.spouseDeduction ? d.spouse(params.employmentIncome).resident : 0) +
-    dependentDeductionTotal(params.dependents, params.year, "resident");
+    dependentDeductionTotal(params.dependents, params.year, "resident") +
+    disabilityDeductionTotal(params.disabilityGeneral, params.disabilitySpecial, params.year, "resident") +
+    medicalDeduction(params.medicalExpenseAnnual, params.employmentIncome, params.year);
   const taxable = Math.max(
     0,
     Math.floor((params.employmentIncome - deductions) / 1000) * 1000,

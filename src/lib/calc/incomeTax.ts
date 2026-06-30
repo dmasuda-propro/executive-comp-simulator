@@ -18,6 +18,29 @@ export function dependentDeductionTotal(
   );
 }
 
+// 障害者控除合計(一般・特別)
+export function disabilityDeductionTotal(
+  general: number,
+  special: number,
+  year: number,
+  kind: "income" | "resident",
+): number {
+  const d = getRateMaster(year).deductions.disability;
+  return general * d.general[kind] + special * d.special[kind];
+}
+
+// 医療費控除 = max(0, 医療費 − min(10万, 総所得×5%))、上限あり。所得税・住民税で同額。
+export function medicalDeduction(
+  medicalExpenseAnnual: number,
+  totalIncome: number,
+  year: number,
+): number {
+  const m = getRateMaster(year).deductions.medical;
+  if (medicalExpenseAnnual <= 0) return 0;
+  const threshold = Math.min(m.threshold, Math.floor(totalIncome * m.incomeRate));
+  return Math.min(m.cap, Math.max(0, medicalExpenseAnnual - threshold));
+}
+
 export function progressiveIncomeTax(
   taxable: number,
   year: number,
@@ -41,6 +64,9 @@ export function calcIncomeTax(params: {
   smallBusinessMutualAnnual: number;
   spouseDeduction: boolean;
   dependents: Dependents;
+  disabilityGeneral: number;
+  disabilitySpecial: number;
+  medicalExpenseAnnual: number;
   year: number;
 }): IncomeTaxResult {
   const m = getRateMaster(params.year);
@@ -52,7 +78,9 @@ export function calcIncomeTax(params: {
     params.idecoPersonalAnnual +
     params.smallBusinessMutualAnnual +
     (params.spouseDeduction ? d.spouse(params.employmentIncome).income : 0) +
-    dependentDeductionTotal(params.dependents, params.year, "income");
+    dependentDeductionTotal(params.dependents, params.year, "income") +
+    disabilityDeductionTotal(params.disabilityGeneral, params.disabilitySpecial, params.year, "income") +
+    medicalDeduction(params.medicalExpenseAnnual, params.employmentIncome, params.year);
   const taxable = Math.max(
     0,
     Math.floor((params.employmentIncome - deductions) / 1000) * 1000,

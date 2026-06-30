@@ -122,5 +122,11 @@ export const rateMaster2026: RateMaster = {
       elderly: { income: 480_000, resident: 380_000 },
       coresidentElderly: { income: 580_000, resident: 450_000 },
     },
+    disability: {
+      general: { income: 270_000, resident: 260_000 }, // 一般障害者
+      special: { income: 400_000, resident: 300_000 }, // 特別障害者(非同居)
+    },
+    // 医療費控除: max(0, 医療費 − min(10万, 総所得×5%))、上限200万
+    medical: { threshold: 100_000, incomeRate: 0.05, cap: 2_000_000 },
   },
 };

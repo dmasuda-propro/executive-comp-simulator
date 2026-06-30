@@ -105,6 +105,9 @@ export function simulateEmployeeCase(input: SimulationInput): CaseResult {
     smallBusinessMutualAnnual: 0,
     spouseDeduction: basic.spouseDeduction,
     dependents: basic.dependents,
+    disabilityGeneral: basic.disabilityGeneral,
+    disabilitySpecial: basic.disabilitySpecial,
+    medicalExpenseAnnual: basic.medicalExpenseAnnual,
     year: basic.simulationYear,
   });
   const residentTax = calcResidentTax({
@@ -114,6 +117,9 @@ export function simulateEmployeeCase(input: SimulationInput): CaseResult {
     smallBusinessMutualAnnual: 0,
     spouseDeduction: basic.spouseDeduction,
     dependents: basic.dependents,
+    disabilityGeneral: basic.disabilityGeneral,
+    disabilitySpecial: basic.disabilitySpecial,
+    medicalExpenseAnnual: basic.medicalExpenseAnnual,
     year: basic.simulationYear,
   });
   const cashNet =
@@ -181,6 +187,9 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
     smallBusinessMutualAnnual: ts.smallBusinessMutualAnnual,
     spouseDeduction: basic.spouseDeduction,
     dependents: basic.dependents,
+    disabilityGeneral: basic.disabilityGeneral,
+    disabilitySpecial: basic.disabilitySpecial,
+    medicalExpenseAnnual: basic.medicalExpenseAnnual,
     year: basic.simulationYear,
   });
   const residentTax = calcResidentTax({
@@ -190,6 +199,9 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
     smallBusinessMutualAnnual: ts.smallBusinessMutualAnnual,
     spouseDeduction: basic.spouseDeduction,
     dependents: basic.dependents,
+    disabilityGeneral: basic.disabilityGeneral,
+    disabilitySpecial: basic.disabilitySpecial,
+    medicalExpenseAnnual: basic.medicalExpenseAnnual,
     year: basic.simulationYear,
   });
 

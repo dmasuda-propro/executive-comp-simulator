@@ -14,6 +14,9 @@ const basic = z.object({
   hasCareInsurance: z.boolean(),
   dependents,
   spouseDeduction: z.boolean(),
+  disabilityGeneral: z.number().int().min(0).max(20),
+  disabilitySpecial: z.number().int().min(0).max(20),
+  medicalExpenseAnnual: z.number().min(0),
   simulationYear: z.number().int(),
 });
 
@@ -78,6 +81,9 @@ export const defaultInput: SimulationInput = {
     hasCareInsurance: false,
     dependents: { general: 0, specific: 0, elderly: 0, coresidentElderly: 0 },
     spouseDeduction: false,
+    disabilityGeneral: 0,
+    disabilitySpecial: 0,
+    medicalExpenseAnnual: 0,
     simulationYear: 2026,
   },
   employee: {

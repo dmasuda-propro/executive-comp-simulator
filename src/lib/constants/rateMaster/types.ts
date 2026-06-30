@@ -54,5 +54,10 @@ export type RateMaster = {
       elderly: DeductionPair; // 老人扶養(70+,非同居)
       coresidentElderly: DeductionPair; // 同居老親等(70+,同居)
     };
+    disability: {
+      general: DeductionPair; // 一般障害者
+      special: DeductionPair; // 特別障害者(非同居)
+    };
+    medical: { threshold: number; incomeRate: number; cap: number };
   };
 };

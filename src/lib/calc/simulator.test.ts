@@ -9,6 +9,9 @@ const input: SimulationInput = {
     hasCareInsurance: true,
     dependents: { general: 0, specific: 0, elderly: 0, coresidentElderly: 0 },
     spouseDeduction: false,
+    disabilityGeneral: 0,
+    disabilitySpecial: 0,
+    medicalExpenseAnnual: 0,
     simulationYear: 2026,
   },
   employee: {
