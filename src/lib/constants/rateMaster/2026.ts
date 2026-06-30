@@ -69,6 +69,9 @@ export const rateMaster2026: RateMaster = {
     childCareRate: 0.0023,
     careRate: 0.0162,
     pensionRate: 0.183,
+    childRearingLevyRate: 0.0036, // 令和6〜8年度 据置(3.6/1000)。全額事業主負担・厚年標準報酬ベース
+    pensionStandardMin: 88_000,
+    pensionStandardMax: 650_000,
     bonusPensionCapPerMonth: 1_500_000,
     bonusHealthCapAnnual: 5_730_000,
     bonusCountThreshold: 4,
@@ -90,7 +93,12 @@ export const rateMaster2026: RateMaster = {
   deductions: {
     salaryDeduction,
     basicDeduction,
-    spouseDeduction: 380_000,
-    dependentDeduction: 380_000,
+    spouse: { income: 380_000, resident: 330_000 },
+    dependent: {
+      general: { income: 380_000, resident: 330_000 },
+      specific: { income: 630_000, resident: 450_000 },
+      elderly: { income: 480_000, resident: 380_000 },
+      coresidentElderly: { income: 580_000, resident: 450_000 },
+    },
   },
 };

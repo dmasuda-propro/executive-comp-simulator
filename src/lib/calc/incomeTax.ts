@@ -1,6 +1,22 @@
 import { getRateMaster } from "@/lib/constants/rateMaster";
 import { D } from "@/lib/utils/money";
+import type { Dependents } from "@/types/input";
 import type { IncomeTaxResult } from "@/types/result";
+
+// 扶養控除合計(所得税 or 住民税)
+export function dependentDeductionTotal(
+  dependents: Dependents,
+  year: number,
+  kind: "income" | "resident",
+): number {
+  const d = getRateMaster(year).deductions.dependent;
+  return (
+    dependents.general * d.general[kind] +
+    dependents.specific * d.specific[kind] +
+    dependents.elderly * d.elderly[kind] +
+    dependents.coresidentElderly * d.coresidentElderly[kind]
+  );
+}
 
 export function progressiveIncomeTax(
   taxable: number,
@@ -24,7 +40,7 @@ export function calcIncomeTax(params: {
   idecoPersonalAnnual: number;
   smallBusinessMutualAnnual: number;
   spouseDeduction: boolean;
-  dependents: number;
+  dependents: Dependents;
   year: number;
 }): IncomeTaxResult {
   const m = getRateMaster(params.year);
@@ -35,8 +51,8 @@ export function calcIncomeTax(params: {
     params.socialInsurance +
     params.idecoPersonalAnnual +
     params.smallBusinessMutualAnnual +
-    (params.spouseDeduction ? d.spouseDeduction : 0) +
-    params.dependents * d.dependentDeduction;
+    (params.spouseDeduction ? d.spouse.income : 0) +
+    dependentDeductionTotal(params.dependents, params.year, "income");
   const taxable = Math.max(
     0,
     Math.floor((params.employmentIncome - deductions) / 1000) * 1000,

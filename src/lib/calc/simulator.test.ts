@@ -7,7 +7,7 @@ const input: SimulationInput = {
     prefecture: "東京",
     age: 40,
     hasCareInsurance: true,
-    dependents: 0,
+    dependents: { general: 0, specific: 0, elderly: 0, coresidentElderly: 0 },
     spouseDeduction: false,
     simulationYear: 2026,
   },

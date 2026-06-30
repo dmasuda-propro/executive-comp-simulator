@@ -9,7 +9,7 @@ describe("calcResidentTax", () => {
       idecoPersonalAnnual: 0,
       smallBusinessMutualAnnual: 0,
       spouseDeduction: false,
-      dependents: 0,
+      dependents: { general: 0, specific: 0, elderly: 0, coresidentElderly: 0 },
       year: 2026,
     });
     // taxable = 4,360,000 - 430,000(基礎) - 900,000 = 3,030,000
@@ -25,7 +25,7 @@ describe("calcResidentTax", () => {
       idecoPersonalAnnual: 0,
       smallBusinessMutualAnnual: 0,
       spouseDeduction: false,
-      dependents: 0,
+      dependents: { general: 0, specific: 0, elderly: 0, coresidentElderly: 0 },
       year: 2026,
     });
     expect(r.incomeLevy).toBe(0);

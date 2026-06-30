@@ -1,9 +1,17 @@
+// 扶養親族の区分別人数
+export type Dependents = {
+  general: number; // 一般扶養(16-18,23-69)
+  specific: number; // 特定扶養(19-22)
+  elderly: number; // 老人扶養(70+,非同居)
+  coresidentElderly: number; // 同居老親等(70+,同居)
+};
+
 export type BasicInput = {
   prefecture: string; // MVP: "東京"
   age: number;
   hasCareInsurance: boolean; // 自動判定 (40<=age<65) を保持
-  dependents: number; // 一般扶養親族数(16歳以上想定の概算)
-  spouseDeduction: boolean; // 配偶者控除(38万)を適用するか
+  dependents: Dependents; // 扶養親族(区分別人数)
+  spouseDeduction: boolean; // 配偶者控除(一般38万)を適用するか
   simulationYear: number; // 2026
 };
 

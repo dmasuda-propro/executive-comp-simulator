@@ -28,12 +28,17 @@ export function calcBonusSocialInsurance(params: {
   const pension = roundHalfDownAtHalf(
     D(pensionBase).times(si.pensionRate).dividedBy(2),
   );
+  // 子ども・子育て拠出金は全額事業主負担(標準賞与額の厚年ベース)
+  const childRearingLevy = Math.floor(
+    D(pensionBase).times(si.childRearingLevyRate).toNumber(),
+  );
 
   const employee = health + care + pension;
   return {
     standardBonus,
     employee,
-    company: employee,
+    company: employee + childRearingLevy,
+    childRearingLevy,
     health,
     care,
     pension,
@@ -49,6 +54,7 @@ export function calcAnnualBonusSocialInsurance(params: {
   const m = getRateMaster(params.year);
   let remaining = m.socialInsurance.bonusHealthCapAnnual;
   let employee = 0;
+  let company = 0;
   for (const bonus of params.bonuses) {
     if (bonus <= 0) continue;
     const r = calcBonusSocialInsurance({
@@ -59,6 +65,7 @@ export function calcAnnualBonusSocialInsurance(params: {
     });
     remaining = Math.max(0, remaining - r.healthCapUsed);
     employee += r.employee;
+    company += r.company;
   }
-  return { employee, company: employee };
+  return { employee, company };
 }

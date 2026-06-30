@@ -46,6 +46,8 @@ function buildSocial(params: {
         year,
       });
   const annualEmployee = monthly.monthlyEmployee * 12 + bonus.employee;
+  // 会社負担は折半分(本人と同額)＋子ども・子育て拠出金(全額事業主)で本人より大きい
+  const annualCompany = monthly.monthlyCompany * 12 + bonus.company;
   return {
     standardMonthly: monthly.standardMonthly,
     monthlyEmployee: monthly.monthlyEmployee,
@@ -53,7 +55,7 @@ function buildSocial(params: {
     bonusEmployee: bonus.employee,
     bonusCompany: bonus.company,
     annualEmployee,
-    annualCompany: annualEmployee,
+    annualCompany,
     breakdown: monthly.breakdown,
     treatedAsMonthly,
   };

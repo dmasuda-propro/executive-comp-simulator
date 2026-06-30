@@ -1,6 +1,8 @@
 import { getRateMaster } from "@/lib/constants/rateMaster";
 import { D } from "@/lib/utils/money";
+import type { Dependents } from "@/types/input";
 import type { ResidentTaxResult } from "@/types/result";
+import { dependentDeductionTotal } from "./incomeTax";
 
 export function calcResidentTax(params: {
   employmentIncome: number;
@@ -8,19 +10,19 @@ export function calcResidentTax(params: {
   idecoPersonalAnnual: number;
   smallBusinessMutualAnnual: number;
   spouseDeduction: boolean;
-  dependents: number;
+  dependents: Dependents;
   year: number;
 }): ResidentTaxResult {
   const m = getRateMaster(params.year);
   const rt = m.residentTax;
-  // 住民税の配偶者・扶養控除は 33 万(所得税 38 万より低い)として概算
+  const d = m.deductions;
   const deductions =
     rt.basicDeduction +
     params.socialInsurance +
     params.idecoPersonalAnnual +
     params.smallBusinessMutualAnnual +
-    (params.spouseDeduction ? 330_000 : 0) +
-    params.dependents * 330_000;
+    (params.spouseDeduction ? d.spouse.resident : 0) +
+    dependentDeductionTotal(params.dependents, params.year, "resident");
   const taxable = Math.max(
     0,
     Math.floor((params.employmentIncome - deductions) / 1000) * 1000,

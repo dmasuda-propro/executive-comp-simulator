@@ -27,7 +27,21 @@ describe("calcMonthlySocialInsurance", () => {
     // 厚年本人 = 300000*0.183/2 = 27450
     expect(r.breakdown.pension).toBe(27_450);
     expect(r.monthlyEmployee).toBe(15_120 + 27_450);
-    expect(r.monthlyCompany).toBe(r.monthlyEmployee);
+    // 子ども・子育て拠出金(全額事業主) = floor(300000*0.0036) = 1080 → 会社負担=本人+1080
+    expect(r.childRearingLevy).toBe(1_080);
+    expect(r.monthlyCompany).toBe(r.monthlyEmployee + 1_080);
+  });
+  it("高額報酬は厚年が標準報酬月額650,000で頭打ち(0にならない)", () => {
+    const r = calcMonthlySocialInsurance({
+      monthlySalary: 700_000,
+      age: 35,
+      year: 2026,
+    });
+    expect(r.standardMonthly).toBe(710_000); // 健保等級(報酬月額700,000→標準報酬710,000)
+    // 厚年本人 = 650000(上限)*0.183/2 = 59475
+    expect(r.breakdown.pension).toBe(59_475);
+    // 拠出金 = floor(650000*0.0036)=2340
+    expect(r.childRearingLevy).toBe(2_340);
   });
   it("40〜65歳は介護あり", () => {
     const r = calcMonthlySocialInsurance({

@@ -18,6 +18,9 @@ describe("calcBonusSocialInsurance", () => {
     expect(r.health).toBe(62_194);
     // 厚年本人 = 1234000*0.183/2 = 112911 → 112911
     expect(r.pension).toBe(112_911);
+    // 子ども・子育て拠出金 = floor(1234000*0.0036) = 4442 (全額事業主)
+    expect(r.childRearingLevy).toBe(4_442);
+    expect(r.company).toBe(r.employee + 4_442);
   });
   it("厚年は月150万上限", () => {
     const r = calcBonusSocialInsurance({
@@ -39,6 +42,7 @@ describe("calcAnnualBonusSocialInsurance", () => {
       year: 2026,
     });
     expect(r.employee).toBeGreaterThan(0);
-    expect(r.company).toBe(r.employee);
+    // 会社負担は子ども・子育て拠出金の分だけ本人より大きい
+    expect(r.company).toBeGreaterThan(r.employee);
   });
 });

@@ -1,11 +1,18 @@
 import { z } from "zod";
 import type { SimulationInput } from "@/types/input";
 
+const dependents = z.object({
+  general: z.number().int().min(0).max(20),
+  specific: z.number().int().min(0).max(20),
+  elderly: z.number().int().min(0).max(20),
+  coresidentElderly: z.number().int().min(0).max(20),
+});
+
 const basic = z.object({
   prefecture: z.string().min(1),
   age: z.number().int().min(0).max(120),
   hasCareInsurance: z.boolean(),
-  dependents: z.number().int().min(0).max(20),
+  dependents,
   spouseDeduction: z.boolean(),
   simulationYear: z.number().int(),
 });
@@ -68,7 +75,7 @@ export const defaultInput: SimulationInput = {
     prefecture: "東京",
     age: 40,
     hasCareInsurance: true,
-    dependents: 0,
+    dependents: { general: 0, specific: 0, elderly: 0, coresidentElderly: 0 },
     spouseDeduction: false,
     simulationYear: 2026,
   },
