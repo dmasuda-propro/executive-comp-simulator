@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSimStore } from "@/lib/state/store";
-import { simulate } from "@/lib/calc/simulator";
+import { simulate, simulateMicroSchemeCase } from "@/lib/calc/simulator";
 import { simulateCorporateFullTaxSaving } from "@/lib/calc/reverseSolver";
 import { simulationSchema } from "@/lib/validation/schema";
 import { IncomeBreakdown } from "@/components/results/IncomeBreakdown";
@@ -11,12 +11,14 @@ import { BasicInfoForm } from "@/components/forms/BasicInfoForm";
 import { EmployeeForm } from "@/components/forms/EmployeeForm";
 import { DirectorPayForm } from "@/components/forms/DirectorPayForm";
 import { TaxSavingForm } from "@/components/forms/TaxSavingForm";
+import { MicroSchemeForm } from "@/components/forms/MicroSchemeForm";
 import { Disclaimer } from "@/components/Disclaimer";
 
 const TABS = [
   { key: "basic", label: "基本情報" },
   { key: "employee", label: "会社員" },
   { key: "director", label: "役員報酬" },
+  { key: "micro", label: "業務委託" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -28,18 +30,22 @@ export default function SimulatorPage() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  const { result, corpFull, error } = useMemo(() => {
+  const { cases, error } = useMemo(() => {
     const parsed = simulationSchema.safeParse(input);
     if (!parsed.success)
-      return { result: null, corpFull: null, error: parsed.error.issues[0]?.message ?? "入力エラー" };
+      return { cases: null, error: parsed.error.issues[0]?.message ?? "入力エラー" };
     try {
+      const result = simulate(input);
       return {
-        result: simulate(input),
-        corpFull: simulateCorporateFullTaxSaving(input),
+        cases: [
+          { header: "会社員（給与・賞与）", result: result.employee },
+          { header: "法人役員（節税フル活用）", result: simulateCorporateFullTaxSaving(input) },
+          { header: "業務委託（マイクロ法人）", result: simulateMicroSchemeCase(input) },
+        ],
         error: null,
       };
     } catch (e) {
-      return { result: null, corpFull: null, error: (e as Error).message };
+      return { cases: null, error: (e as Error).message };
     }
   }, [input]);
 
@@ -87,6 +93,7 @@ export default function SimulatorPage() {
                 <TaxSavingForm />
               </div>
             )}
+            {tab === "micro" && <MicroSchemeForm />}
             <button
               onClick={reset}
               className="mt-3 w-full rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
@@ -104,10 +111,10 @@ export default function SimulatorPage() {
           {error && (
             <p className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p>
           )}
-          {result && corpFull && (
+          {cases && (
             <>
-              <IncomeBreakdown employee={result.employee} corporate={corpFull} />
-              <CompanyCostComparison employee={result.employee} corporate={corpFull} />
+              <IncomeBreakdown cases={cases} />
+              <CompanyCostComparison cases={cases} />
             </>
           )}
           <Disclaimer />

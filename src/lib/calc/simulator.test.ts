@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { simulate } from "./simulator";
+import { simulate, simulateMicroSchemeCase } from "./simulator";
+import { calcMonthlySocialInsurance } from "./socialInsurance";
 import type { SimulationInput } from "@/types/input";
 
 const input: SimulationInput = {
@@ -45,6 +46,11 @@ const input: SimulationInput = {
     travelDaysPerMonth: 0,
     travelAllowancePerDay: 0,
     lifeInsuranceAnnual: 0,
+  },
+  microScheme: {
+    contractRevenueAnnual: 8_060_000,
+    contractExpensesAnnual: 0,
+    microMonthlySalary: 55_000,
   },
 };
 
@@ -115,5 +121,41 @@ describe("家賃補助は課税給与扱い(M-2)", () => {
     expect(withSub.employee.incomeTax.total).toBeGreaterThan(
       noSub.employee.incomeTax.total,
     );
+  });
+});
+
+describe("simulateMicroSchemeCase (マイクロ法人＋業務委託)", () => {
+  const micro = {
+    ...input,
+    microScheme: {
+      contractRevenueAnnual: 8_000_000,
+      contractExpensesAnnual: 0,
+      microMonthlySalary: 55_000,
+    },
+  };
+  const r = simulateMicroSchemeCase(micro);
+  it("社会保険は最低等級(役員報酬5.5万)で算定され、業務委託には課されない", () => {
+    const minSocial =
+      calcMonthlySocialInsurance({ monthlySalary: 55_000, age: micro.basic.age, year: 2026 })
+        .monthlyEmployee * 12;
+    expect(r.social.annualEmployee).toBe(minSocial);
+  });
+  it("額面=業務委託報酬+マイクロ役員報酬、自社支出は業務委託費のみ", () => {
+    expect(r.salaryIncome).toBe(8_000_000 + 660_000);
+    expect(r.companyBaseCost).toBe(8_000_000);
+    expect(r.employerBearsSocial).toBe(false);
+  });
+  it("明細ブリッジ: 額面−経費−社保−所得税−住民税=現金手取り", () => {
+    expect(
+      r.salaryIncome -
+        r.businessExpenseAnnual -
+        r.social.annualEmployee -
+        r.incomeTax.total -
+        r.residentTax.total,
+    ).toBe(r.cashNet);
+  });
+  it("社保最低化で法人役員より社会保険料(本人)が小さい", () => {
+    const corp = simulate(micro).corporate;
+    expect(r.social.annualEmployee).toBeLessThan(corp.social.annualEmployee);
   });
 });

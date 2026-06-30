@@ -135,6 +135,9 @@ export function simulateEmployeeCase(input: SimulationInput): CaseResult {
     salaryIncome,
     baseSalaryAnnual: employee.monthlySalary * 12 + employee.rentSubsidyAnnual,
     bonusAnnual: employee.annualBonus,
+    businessExpenseAnnual: 0,
+    companyBaseCost: salaryIncome,
+    employerBearsSocial: true,
     employmentIncome,
     social,
     incomeTax,
@@ -244,6 +247,9 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
     salaryIncome,
     baseSalaryAnnual: directorSalaryAnnual,
     bonusAnnual: fixedBonusAnnual,
+    businessExpenseAnnual: 0,
+    companyBaseCost: salaryIncome,
+    employerBearsSocial: true,
     employmentIncome,
     social,
     incomeTax,
@@ -260,6 +266,80 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
       remainingCash: corp.remainingCash,
     },
     totalOwnerCash: effectiveNet + corp.remainingCash,
+  };
+}
+
+// マイクロ法人＋業務委託スキーム。本業を業務委託(事業所得・青色65万)で受け、
+// 社会保険は別会社(マイクロ法人)の役員報酬5.5万円で最低等級に固定する。
+export function simulateMicroSchemeCase(input: SimulationInput): CaseResult {
+  const { basic, microScheme } = input;
+  const year = basic.simulationYear;
+  const rev = microScheme.contractRevenueAnnual;
+  const exp = microScheme.contractExpensesAnnual;
+  const microSalaryAnnual = microScheme.microMonthlySalary * 12;
+
+  // マイクロ法人の給与所得(給与所得控除後)。役員報酬が控除額未満なら0
+  const microEmploymentIncome = calcEmploymentIncome(microSalaryAnnual, year).employmentIncome;
+  // 事業所得(業務委託): 青色申告特別控除65万(控除前所得の範囲で)
+  const blueDeduction = Math.min(650_000, Math.max(0, rev - exp));
+  const businessIncome = Math.max(0, rev - exp - blueDeduction);
+  const totalIncome = businessIncome + microEmploymentIncome; // 合計所得金額
+
+  // 社会保険は最低等級(マイクロ法人の役員報酬ベース・賞与なし)
+  const monthly = calcMonthlySocialInsurance({
+    monthlySalary: microScheme.microMonthlySalary,
+    age: basic.age,
+    year,
+  });
+  const social: SocialInsuranceResult = {
+    standardMonthly: monthly.standardMonthly,
+    monthlyEmployee: monthly.monthlyEmployee,
+    monthlyCompany: monthly.monthlyCompany,
+    bonusEmployee: 0,
+    bonusCompany: 0,
+    annualEmployee: monthly.monthlyEmployee * 12,
+    annualCompany: monthly.monthlyCompany * 12,
+    breakdown: monthly.breakdown,
+    treatedAsMonthly: false,
+  };
+
+  const taxArgs = {
+    employmentIncome: totalIncome, // 合計所得金額として税額計算
+    socialInsurance: social.annualEmployee,
+    idecoPersonalAnnual: 0,
+    smallBusinessMutualAnnual: 0,
+    spouseDeduction: basic.spouseDeduction,
+    dependents: basic.dependents,
+    disabilityGeneral: basic.disabilityGeneral,
+    disabilitySpecial: basic.disabilitySpecial,
+    medicalExpenseAnnual: basic.medicalExpenseAnnual,
+    year,
+  };
+  const incomeTax = calcIncomeTax(taxArgs);
+  const residentTax = calcResidentTax(taxArgs);
+
+  const grossReceived = rev + microSalaryAnnual; // 額面(本業報酬＋マイクロ法人役員報酬)
+  const cashNet =
+    grossReceived - exp - social.annualEmployee - incomeTax.total - residentTax.total;
+
+  return {
+    label: "マイクロ法人＋業務委託",
+    salaryIncome: grossReceived,
+    baseSalaryAnnual: rev,
+    bonusAnnual: microSalaryAnnual,
+    businessExpenseAnnual: exp,
+    companyBaseCost: rev, // 自社が支払う業務委託費のみ
+    employerBearsSocial: false, // 雇用でないため会社負担社保なし
+    employmentIncome: totalIncome,
+    social,
+    incomeTax,
+    residentTax,
+    ideco: emptyIdeco,
+    taxSaving: emptyTaxSaving,
+    cashNet,
+    effectiveNet: cashNet,
+    futureAssetNet: cashNet,
+    totalOwnerCash: cashNet,
   };
 }
 

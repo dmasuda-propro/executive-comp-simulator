@@ -45,10 +45,13 @@ export type TaxSavingResult = {
 
 export type CaseResult = {
   label: string;
-  salaryIncome: number; // 額面合計(月給年額 + 賞与)
-  baseSalaryAnnual: number; // 月給・役員報酬の年額(家賃補助含む)
-  bonusAnnual: number; // 賞与・事前確定届出給与
-  employmentIncome: number; // 給与所得(給与所得控除後)
+  salaryIncome: number; // 額面合計(月給年額 + 賞与、業務委託は報酬+マイクロ役員報酬)
+  baseSalaryAnnual: number; // 月給・役員報酬の年額(業務委託は本業報酬)
+  bonusAnnual: number; // 賞与・事前確定届出給与(業務委託はマイクロ法人役員報酬)
+  businessExpenseAnnual: number; // 業務委託の経費(給与ケースは0)
+  companyBaseCost: number; // 自社が支払う基本額(給与/役員報酬の額面、業務委託は業務委託費)
+  employerBearsSocial: boolean; // 自社が会社負担社保を負うか(業務委託はfalse)
+  employmentIncome: number; // 給与所得(給与所得控除後)。業務委託は合計所得金額
   social: SocialInsuranceResult;
   incomeTax: IncomeTaxResult;
   residentTax: ResidentTaxResult;

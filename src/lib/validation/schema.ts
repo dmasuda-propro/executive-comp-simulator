@@ -67,11 +67,18 @@ const taxSaving = z
       ctx.addIssue({ code: "custom", message: "iDeCo+は1,000円単位" });
   });
 
+const microScheme = z.object({
+  contractRevenueAnnual: z.number().min(0),
+  contractExpensesAnnual: z.number().min(0),
+  microMonthlySalary: z.number().min(0),
+});
+
 export const simulationSchema = z.object({
   basic,
   employee,
   corporate,
   taxSaving,
+  microScheme,
 });
 
 export const defaultInput: SimulationInput = {
@@ -117,5 +124,10 @@ export const defaultInput: SimulationInput = {
     travelDaysPerMonth: 1,
     travelAllowancePerDay: 20_000,
     lifeInsuranceAnnual: 0,
+  },
+  microScheme: {
+    contractRevenueAnnual: 8_060_000,
+    contractExpensesAnnual: 0,
+    microMonthlySalary: 55_000,
   },
 };

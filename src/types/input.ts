@@ -53,11 +53,19 @@ export type TaxSavingInput = {
   lifeInsuranceAnnual: number;
 };
 
+// マイクロ法人＋業務委託スキーム
+export type MicroSchemeInput = {
+  contractRevenueAnnual: number; // 業務委託の年間報酬(本業)
+  contractExpensesAnnual: number; // 業務委託の経費
+  microMonthlySalary: number; // マイクロ法人の役員報酬(月)。社保最低化のため既定55,000
+};
+
 export type SimulationInput = {
   basic: BasicInput;
   employee: EmployeeInput;
   corporate: CorporateInput;
   taxSaving: TaxSavingInput;
+  microScheme: MicroSchemeInput;
 };
 
 export type OptimizationInput = {

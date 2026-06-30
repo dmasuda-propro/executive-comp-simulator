@@ -52,6 +52,11 @@ const input: SimulationInput = {
     travelAllowancePerDay: 0,
     lifeInsuranceAnnual: 0,
   },
+  microScheme: {
+    contractRevenueAnnual: 8_060_000,
+    contractExpensesAnnual: 0,
+    microMonthlySalary: 55_000,
+  },
 };
 
 describe("maxTaxSavingConfig", () => {

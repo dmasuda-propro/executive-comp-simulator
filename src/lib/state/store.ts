@@ -33,7 +33,7 @@ export const useSimStore = create<Store>()(
     {
       name: "executive-comp-simulator-input",
       storage: createJSONStorage(() => localStorage),
-      version: 5,
+      version: 6,
     },
   ),
 );
