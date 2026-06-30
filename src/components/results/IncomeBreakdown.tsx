@@ -1,7 +1,7 @@
 import type { CaseResult } from "@/types/result";
 import { fmtYen } from "@/lib/utils/format";
 
-type Kind = "head" | "minus" | "plus" | "subtotal" | "total";
+type Kind = "head" | "detail" | "minus" | "plus" | "subtotal" | "total";
 type Row = { label: string; emp: number; corp: number; kind: Kind };
 
 export function IncomeBreakdown({
@@ -18,7 +18,9 @@ export function IncomeBreakdown({
   });
 
   const allRows: Row[] = [
-    { label: "額面（給与・役員報酬＋賞与）", kind: "head", ...both((c) => c.salaryIncome) },
+    { label: "年収（月給・役員報酬×12）", kind: "detail", ...both((c) => c.baseSalaryAnnual) },
+    { label: "賞与（ボーナス・事前確定届出給与）", kind: "detail", ...both((c) => c.bonusAnnual) },
+    { label: "額面 合計", kind: "subtotal", ...both((c) => c.salaryIncome) },
     { label: "社会保険料（本人）", kind: "minus", ...both((c) => c.social.annualEmployee) },
     { label: "所得税", kind: "minus", ...both((c) => c.incomeTax.total) },
     { label: "住民税", kind: "minus", ...both((c) => c.residentTax.total) },
@@ -61,12 +63,20 @@ export function IncomeBreakdown({
             {rows.map((r) => {
               const strong = r.kind === "subtotal" || r.kind === "total" || r.kind === "head";
               const bg = r.kind === "total" ? "bg-blue-100" : r.kind === "subtotal" ? "bg-blue-50" : "";
-              const indent = r.kind === "minus" || r.kind === "plus" ? "pl-3" : "";
+              const indent =
+                r.kind === "minus" || r.kind === "plus" || r.kind === "detail" ? "pl-3" : "";
+              const detail = r.kind === "detail" ? "text-gray-400" : "";
               const valColor =
-                r.kind === "minus" ? "text-rose-600" : r.kind === "plus" ? "text-green-600" : "";
+                r.kind === "minus"
+                  ? "text-rose-600"
+                  : r.kind === "plus"
+                    ? "text-green-600"
+                    : r.kind === "detail"
+                      ? "text-gray-400"
+                      : "";
               return (
                 <tr key={r.label} className={`border-b border-gray-100 ${bg} ${strong ? "font-bold" : ""}`}>
-                  <td className={`py-1.5 text-left ${indent}`}>{r.label}</td>
+                  <td className={`py-1.5 text-left ${indent} ${detail}`}>{r.label}</td>
                   <td className={`py-1.5 text-right tabular-nums ${valColor}`}>{cell(r.emp, r.kind)}</td>
                   <td className={`py-1.5 text-right tabular-nums ${valColor}`}>{cell(r.corp, r.kind)}</td>
                 </tr>

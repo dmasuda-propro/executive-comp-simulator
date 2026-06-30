@@ -45,7 +45,9 @@ export type TaxSavingResult = {
 
 export type CaseResult = {
   label: string;
-  salaryIncome: number;
+  salaryIncome: number; // 額面合計(月給年額 + 賞与)
+  baseSalaryAnnual: number; // 月給・役員報酬の年額(家賃補助含む)
+  bonusAnnual: number; // 賞与・事前確定届出給与
   employmentIncome: number; // 給与所得(給与所得控除後)
   social: SocialInsuranceResult;
   incomeTax: IncomeTaxResult;

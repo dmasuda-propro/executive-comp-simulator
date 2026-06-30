@@ -127,6 +127,8 @@ export function simulateEmployeeCase(input: SimulationInput): CaseResult {
   return {
     label: "会社員",
     salaryIncome,
+    baseSalaryAnnual: employee.monthlySalary * 12 + employee.rentSubsidyAnnual,
+    bonusAnnual: employee.annualBonus,
     employmentIncome,
     social,
     incomeTax,
@@ -228,6 +230,8 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
   return {
     label: "法人役員",
     salaryIncome,
+    baseSalaryAnnual: directorSalaryAnnual,
+    bonusAnnual: fixedBonusAnnual,
     employmentIncome,
     social,
     incomeTax,

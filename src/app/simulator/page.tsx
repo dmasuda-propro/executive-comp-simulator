@@ -6,6 +6,7 @@ import { simulate } from "@/lib/calc/simulator";
 import { simulateCorporateFullTaxSaving } from "@/lib/calc/reverseSolver";
 import { simulationSchema } from "@/lib/validation/schema";
 import { IncomeBreakdown } from "@/components/results/IncomeBreakdown";
+import { CompanyCostComparison } from "@/components/results/CompanyCostComparison";
 import { BasicInfoForm } from "@/components/forms/BasicInfoForm";
 import { EmployeeForm } from "@/components/forms/EmployeeForm";
 import { CorporateForm } from "@/components/forms/CorporateForm";
@@ -113,6 +114,7 @@ export default function SimulatorPage() {
           {result && corpFull && (
             <>
               <IncomeBreakdown employee={result.employee} corporate={corpFull} />
+              <CompanyCostComparison employee={result.employee} corporate={corpFull} />
               <SummaryCards result={result} />
 
               <section className="rounded-xl border border-gray-200 bg-white p-4">
