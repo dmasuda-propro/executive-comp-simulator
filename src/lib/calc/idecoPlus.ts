@@ -26,11 +26,15 @@ export function calcIdecoPlus(params: {
   return {
     companyAnnual,
     personalAnnual,
-    corporateTaxSaving: D(companyAnnual).times(params.corporateTaxRate).toNumber(),
-    personalIncomeTaxSaving: D(personalAnnual)
-      .times(params.marginalIncomeTaxRate)
-      .toNumber(),
-    personalResidentTaxSaving: D(personalAnnual).times(0.1).toNumber(),
+    corporateTaxSaving: Math.floor(
+      D(companyAnnual).times(params.corporateTaxRate).toNumber(),
+    ),
+    personalIncomeTaxSaving: Math.floor(
+      D(personalAnnual).times(params.marginalIncomeTaxRate).toNumber(),
+    ),
+    personalResidentTaxSaving: Math.floor(
+      D(personalAnnual).times(0.1).toNumber(),
+    ),
     socialInsuranceSaving: 0,
   };
 }

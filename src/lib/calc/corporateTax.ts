@@ -16,9 +16,9 @@ export function calcCorporateTax(params: {
     .minus(params.idecoPlusCompanyAnnual)
     .minus(params.companyDeductibleExpenses)
     .toNumber();
-  const corporateTax = D(Math.max(0, profitBeforeTax))
-    .times(params.corporateTaxRate)
-    .toNumber();
+  const corporateTax = Math.floor(
+    D(Math.max(0, profitBeforeTax)).times(params.corporateTaxRate).toNumber(),
+  );
   return {
     profitBeforeTax,
     corporateTax,

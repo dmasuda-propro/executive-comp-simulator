@@ -63,3 +63,54 @@ describe("simulate", () => {
     );
   });
 });
+
+describe("賞与社保のエッジケース(H-1)", () => {
+  it("賞与額>0・回数0でも賞与社保が課され、回数1と一致する", () => {
+    const c0 = simulate({
+      ...input,
+      employee: { ...input.employee, bonusCount: 0 },
+    });
+    const c1 = simulate({
+      ...input,
+      employee: { ...input.employee, bonusCount: 1 },
+    });
+    expect(c0.employee.social.bonusEmployee).toBeGreaterThan(0);
+    expect(c0.employee.social.annualEmployee).toBe(
+      c1.employee.social.annualEmployee,
+    );
+  });
+});
+
+describe("将来資産の対称性(H-2)", () => {
+  const base = simulate(input);
+  const withMutual = simulate({
+    ...input,
+    taxSaving: { ...input.taxSaving, smallBusinessMutualMonthly: 30_000 },
+  });
+  it("小規模共済は現金が出るので実質手取りを減らす", () => {
+    expect(withMutual.corporate.effectiveNet).toBeLessThan(
+      base.corporate.effectiveNet,
+    );
+  });
+  it("将来資産込みでは積立(年36万)が戻り実質手取りより大きい", () => {
+    expect(withMutual.corporate.futureAssetNet).toBe(
+      withMutual.corporate.effectiveNet + 360_000,
+    );
+  });
+});
+
+describe("家賃補助は課税給与扱い(M-2)", () => {
+  it("家賃補助を増やすと給与収入・所得税が増える", () => {
+    const noSub = simulate(input);
+    const withSub = simulate({
+      ...input,
+      employee: { ...input.employee, rentSubsidyAnnual: 600_000 },
+    });
+    expect(withSub.employee.salaryIncome).toBe(
+      noSub.employee.salaryIncome + 600_000,
+    );
+    expect(withSub.employee.incomeTax.total).toBeGreaterThan(
+      noSub.employee.incomeTax.total,
+    );
+  });
+});

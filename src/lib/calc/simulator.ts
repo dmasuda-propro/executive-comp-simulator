@@ -8,7 +8,7 @@ import type {
 import { calcMonthlySocialInsurance } from "./socialInsurance";
 import { calcAnnualBonusSocialInsurance } from "./bonusSocialInsurance";
 import { calcEmploymentIncome } from "./salaryIncome";
-import { calcIncomeTax, progressiveIncomeTax } from "./incomeTax";
+import { calcIncomeTax } from "./incomeTax";
 import { calcResidentTax } from "./residentTax";
 import { calcIdecoPlus, validateIdecoPlus } from "./idecoPlus";
 import { calcTaxSaving } from "./taxSaving";
@@ -27,7 +27,9 @@ function buildSocial(params: {
   age: number;
   year: number;
 }): SocialInsuranceResult {
-  const { monthlySalary, annualBonus, bonusCount, age, year } = params;
+  const { monthlySalary, annualBonus, age, year } = params;
+  // 賞与額>0なのに回数0だと賞与社保を取りこぼすため最低1回に正規化(optimizerと共通の挙動)
+  const bonusCount = annualBonus > 0 ? Math.max(1, params.bonusCount) : 0;
   const threshold = 4; // 年4回以上は報酬扱い
   const treatedAsMonthly = bonusCount >= threshold;
   const effectiveMonthly = treatedAsMonthly
@@ -80,9 +82,11 @@ const emptyTaxSaving = {
 
 export function simulateEmployeeCase(input: SimulationInput): CaseResult {
   const { basic, employee } = input;
-  const salaryIncome = employee.monthlySalary * 12 + employee.annualBonus;
+  // 家賃補助(現金給付)は課税給与かつ社会保険の算定対象として扱う(月割で報酬に算入)
+  const salaryIncome =
+    employee.monthlySalary * 12 + employee.annualBonus + employee.rentSubsidyAnnual;
   const social = buildSocial({
-    monthlySalary: employee.monthlySalary,
+    monthlySalary: employee.monthlySalary + employee.rentSubsidyAnnual / 12,
     annualBonus: employee.annualBonus,
     bonusCount: employee.bonusCount,
     age: basic.age,
@@ -117,7 +121,8 @@ export function simulateEmployeeCase(input: SimulationInput): CaseResult {
     incomeTax.total -
     residentTax.total -
     idecoPersonalAnnual;
-  const effectiveNet = cashNet + employee.rentSubsidyAnnual;
+  // 家賃補助は課税給与として salaryIncome に算入済みのため、ここで二重加算しない
+  const effectiveNet = cashNet;
   return {
     label: "会社員",
     salaryIncome,
@@ -158,29 +163,16 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
       taxSaving.idecoPlusPersonalMonthly,
     );
 
-  // 限界税率の概算: 控除前の課税所得から
-  const provisionalTaxable = Math.max(
-    0,
-    employmentIncome - social.annualEmployee - 580_000,
-  );
-  const marginalRate = progressiveIncomeTax(
-    provisionalTaxable,
-    basic.simulationYear,
-  ).marginalRate;
-  const ideco = taxSaving.idecoPlusEnabled
-    ? calcIdecoPlus({
-        companyMonthly: taxSaving.idecoPlusCompanyMonthly,
-        personalMonthly: taxSaving.idecoPlusPersonalMonthly,
-        corporateTaxRate: corporate.corporateTaxRate,
-        marginalIncomeTaxRate: marginalRate,
-      })
-    : emptyIdeco;
   const ts = calcTaxSaving(taxSaving);
+  // iDeCo+個人掛金(所得控除額)。掛金額は限界税率に依存しないため先に確定。
+  const idecoPersonalAnnual = taxSaving.idecoPlusEnabled
+    ? taxSaving.idecoPlusPersonalMonthly * 12
+    : 0;
 
   const incomeTax = calcIncomeTax({
     employmentIncome,
     socialInsurance: social.annualEmployee,
-    idecoPersonalAnnual: ideco.personalAnnual,
+    idecoPersonalAnnual,
     smallBusinessMutualAnnual: ts.smallBusinessMutualAnnual,
     spouseDeduction: basic.spouseDeduction,
     dependents: basic.dependents,
@@ -189,12 +181,22 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
   const residentTax = calcResidentTax({
     employmentIncome,
     socialInsurance: social.annualEmployee,
-    idecoPersonalAnnual: ideco.personalAnnual,
+    idecoPersonalAnnual,
     smallBusinessMutualAnnual: ts.smallBusinessMutualAnnual,
     spouseDeduction: basic.spouseDeduction,
     dependents: basic.dependents,
     year: basic.simulationYear,
   });
+
+  // 節税額表示用の限界税率は、実際の課税所得から得た限界税率を使う(ハードコードを排除)
+  const ideco = taxSaving.idecoPlusEnabled
+    ? calcIdecoPlus({
+        companyMonthly: taxSaving.idecoPlusCompanyMonthly,
+        personalMonthly: taxSaving.idecoPlusPersonalMonthly,
+        corporateTaxRate: corporate.corporateTaxRate,
+        marginalIncomeTaxRate: incomeTax.marginalRate,
+      })
+    : emptyIdeco;
 
   const cashNet =
     salaryIncome -
@@ -203,12 +205,11 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
     residentTax.total -
     ideco.personalAnnual -
     ts.smallBusinessMutualAnnual;
+  // 実質手取り = 現金手取り + 非現金の経済的メリット(社宅・旅費・iDeCo+会社掛金)。
+  // iDeCo個人掛金・小規模共済は「現金として出ていく将来資産」なので実質手取りには戻さず、
+  // futureAssetNet(将来資産込み)で戻す(個人iDeCoと小規模で扱いを統一)。
   const effectiveNet =
-    cashNet +
-    ts.housingBenefit +
-    ts.travelAllowanceAnnual +
-    ideco.companyAnnual +
-    ts.smallBusinessMutualAnnual;
+    cashNet + ts.housingBenefit + ts.travelAllowanceAnnual + ideco.companyAnnual;
 
   const corp = calcCorporateTax({
     preSalaryProfit: corporate.preSalaryProfit,
@@ -231,7 +232,8 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
     taxSaving: ts,
     cashNet,
     effectiveNet,
-    futureAssetNet: effectiveNet + ideco.personalAnnual,
+    futureAssetNet:
+      effectiveNet + ideco.personalAnnual + ts.smallBusinessMutualAnnual,
     corporate: {
       profitBeforeTax: corp.profitBeforeTax,
       corporateTax: corp.corporateTax,
