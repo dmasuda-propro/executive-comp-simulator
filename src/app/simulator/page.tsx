@@ -14,6 +14,7 @@ import { CashflowChart } from "@/components/results/CashflowChart";
 import { TaxBreakdown } from "@/components/results/TaxBreakdown";
 import { TakeHomeTiers, SavingsEffect } from "@/components/results/SavingsEffect";
 import { OptimizationRanking } from "@/components/results/OptimizationRanking";
+import { ReverseSolver } from "@/components/results/ReverseSolver";
 import { Disclaimer } from "@/components/Disclaimer";
 
 const TABS = [
@@ -109,6 +110,13 @@ export default function SimulatorPage() {
                   <h2 className="mb-2 font-semibold">法人役員の負担内訳</h2>
                   <TaxBreakdown result={result.corporate} />
                 </div>
+              </section>
+
+              <section className="rounded-xl border border-gray-200 bg-white p-4">
+                <h2 className="mb-2 font-semibold">
+                  逆算：会社員と同じ実質手取りに必要な役員報酬（節税フル活用）
+                </h2>
+                <ReverseSolver />
               </section>
 
               <section className="rounded-xl border border-gray-200 bg-white p-4">
