@@ -98,8 +98,8 @@ export const defaultInput: SimulationInput = {
     corporateTaxRate: 0.3,
   },
   taxSaving: {
-    companyHousingEnabled: false,
-    monthlyRent: 200_000,
+    companyHousingEnabled: true,
+    monthlyRent: 65_000,
     companyRentShareRate: 0.5,
     personalRentShareRate: 0.5,
     idecoPlusEnabled: true,
