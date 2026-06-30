@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 役員報酬・会社員比較シミュレーター
 
-## Getting Started
+会社員として働く場合と、法人化して役員報酬・節税施策（iDeCo+・小規模企業共済・社宅概算・出張旅費概算）を使う場合の **手取り / 実質手取り / 法人残キャッシュ / 個人＋法人合計 / 各税負担 / 会社員との差額** を概算比較する Web シミュレーターです。最適化モードでは役員報酬・賞与を総当たりして合計キャッシュ上位 20 パターンを表示します。
 
-First, run the development server:
+## 技術構成
+
+Next.js (App Router) / TypeScript / Tailwind CSS / React Hook Form / Zod / Recharts / decimal.js / Vitest
+
+## コマンド
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev      # 開発サーバ (http://localhost:3000)
+npm test         # ユニットテスト (Vitest)
+npm run build    # 本番ビルド
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+主要画面:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `/` — トップ（説明・各モードへの導線）
+- `/simulator` — 入力フォーム（左）＋ 結果カード・比較表・グラフ・最適化（右）。入力変更でリアルタイム再計算。
+- `/simulator/result` — 結果詳細（比較表＋会社員/法人の負担内訳）
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 料率・税率マスタの差し替え
 
-## Learn More
+税制・社会保険料率は年度改定されるため、年度マスタを単一ソースに集約しています。
 
-To learn more about Next.js, take a look at the following resources:
+- 年度マスタ: `src/lib/constants/rateMaster/2026.ts`
+  - 社会保険料率（健保 9.85% / 子育て支援金 0.23% / 介護 1.62% / 厚年 18.3%、協会けんぽ東京 2026）
+  - 標準報酬月額表は **等級区分（固定）× 料率で実行時生成**。料率を 1 か所変えれば全等級が再計算されます。
+  - 所得税ブラケット・給与所得控除・基礎控除・住民税率/均等割
+- 年度解決: `src/lib/constants/rateMaster/index.ts` の `getRateMaster(year)`
+- **新年度を追加するには**: `2027.ts` 等を作成して `RateMaster` 型を満たし、`index.ts` の `REGISTRY` に登録します。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 計算ロジック
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`src/lib/calc/*` は UI 非依存の純粋関数で、すべて Vitest でテストしています（`npm test`）。
 
-## Deploy on Vercel
+- `socialInsurance` / `bonusSocialInsurance` — 月給は標準報酬月額、賞与は標準賞与額。厚年 月 150 万・健保 年累計 573 万上限、賞与年 4 回以上は報酬扱い。
+- `salaryIncome` / `incomeTax` / `residentTax` — 給与所得控除・所得控除・超過累進・復興特別所得税・住民税所得割 10%＋均等割。
+- `idecoPlus` — 会社負担分は法人損金、個人負担分は小規模企業共済等掛金控除。社保削減効果は 0。合計月額 5,000〜23,000 円（1,000 円単位）でバリデーション。
+- `taxSaving` — 社宅・出張旅費・小規模企業共済・経営セーフティ共済。
+- `corporateTax` — 役員報酬支給前利益から各損金を控除し実効税率で課税。
+- `simulator` / `optimizer` — 会社員/法人ケースの比較と最適報酬探索。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 注意
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+本ツールの数値はすべて **概算** です。令和8年（2026年）分の基礎控除・給与所得控除などの税制改正値は実装時点の想定値であり、正式値の確定後は `src/lib/constants/rateMaster/2026.ts` を差し替えてください。住民税の控除額・均等割の非課税判定・役員社宅の賃貸料相当額・健康保険組合別料率などは簡略化しています。実行前に税理士・社労士等の専門家へ確認してください。
