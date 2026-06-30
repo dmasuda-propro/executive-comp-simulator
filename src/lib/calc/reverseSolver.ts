@@ -23,6 +23,15 @@ export function maxTaxSavingConfig(
   };
 }
 
+// 法人タブの役員報酬・事前確定届出給与はそのまま、節税のみフル活用した法人ケースを計算
+export function simulateCorporateFullTaxSaving(input: SimulationInput): CaseResult {
+  const idecoPlusMax = getRateMaster(input.basic.simulationYear).idecoPlus.monthlyMax;
+  return simulateCorporateCase({
+    ...input,
+    taxSaving: maxTaxSavingConfig(input.taxSaving, idecoPlusMax),
+  });
+}
+
 export type ReverseSolveResult = {
   metric: SolveMetric;
   targetValue: number; // 現職(会社員)の指標値

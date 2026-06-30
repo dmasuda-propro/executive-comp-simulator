@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSimStore } from "@/lib/state/store";
 import { simulate } from "@/lib/calc/simulator";
@@ -9,7 +9,15 @@ import { Disclaimer } from "@/components/Disclaimer";
 
 export default function ResultPage() {
   const { input } = useSimStore();
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const result = useMemo(() => simulate(input), [input]);
+  if (!hydrated)
+    return (
+      <main className="mx-auto max-w-4xl p-6">
+        <p className="text-sm text-gray-400">読み込み中…</p>
+      </main>
+    );
   return (
     <main className="mx-auto max-w-4xl p-6">
       <Link href="/simulator" className="text-sm text-blue-600">

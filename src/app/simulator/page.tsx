@@ -1,9 +1,11 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSimStore } from "@/lib/state/store";
 import { simulate } from "@/lib/calc/simulator";
+import { simulateCorporateFullTaxSaving } from "@/lib/calc/reverseSolver";
 import { simulationSchema } from "@/lib/validation/schema";
+import { IncomeBreakdown } from "@/components/results/IncomeBreakdown";
 import { BasicInfoForm } from "@/components/forms/BasicInfoForm";
 import { EmployeeForm } from "@/components/forms/EmployeeForm";
 import { CorporateForm } from "@/components/forms/CorporateForm";
@@ -29,17 +31,32 @@ type TabKey = (typeof TABS)[number]["key"];
 export default function SimulatorPage() {
   const { input, reset } = useSimStore();
   const [tab, setTab] = useState<TabKey>("basic");
+  // localStorageから復元した入力でSSRと不整合が出ないよう、ハイドレーション後に描画
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
 
-  const { result, error } = useMemo(() => {
+  const { result, corpFull, error } = useMemo(() => {
     const parsed = simulationSchema.safeParse(input);
     if (!parsed.success)
-      return { result: null, error: parsed.error.issues[0]?.message ?? "入力エラー" };
+      return { result: null, corpFull: null, error: parsed.error.issues[0]?.message ?? "入力エラー" };
     try {
-      return { result: simulate(input), error: null };
+      return {
+        result: simulate(input),
+        corpFull: simulateCorporateFullTaxSaving(input),
+        error: null,
+      };
     } catch (e) {
-      return { result: null, error: (e as Error).message };
+      return { result: null, corpFull: null, error: (e as Error).message };
     }
   }, [input]);
+
+  if (!hydrated) {
+    return (
+      <main className="mx-auto max-w-6xl p-4 sm:p-6">
+        <p className="text-sm text-gray-400">読み込み中…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-6xl p-4 sm:p-6">
@@ -77,8 +94,11 @@ export default function SimulatorPage() {
               onClick={reset}
               className="mt-3 w-full rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
             >
-              入力を初期値に戻す
+              サンプル値に戻す
             </button>
+            <p className="mt-1 text-[11px] text-gray-400">
+              入力した金額は自動保存され、次回アクセス時の初期値として復元されます。
+            </p>
           </div>
         </div>
 
@@ -87,8 +107,9 @@ export default function SimulatorPage() {
           {error && (
             <p className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p>
           )}
-          {result && (
+          {result && corpFull && (
             <>
+              <IncomeBreakdown employee={result.employee} corporate={corpFull} />
               <SummaryCards result={result} />
 
               <section className="rounded-xl border border-gray-200 bg-white p-4">
