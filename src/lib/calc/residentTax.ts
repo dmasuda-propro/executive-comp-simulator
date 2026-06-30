@@ -17,11 +17,11 @@ export function calcResidentTax(params: {
   const rt = m.residentTax;
   const d = m.deductions;
   const deductions =
-    rt.basicDeduction +
+    rt.basicDeduction(params.employmentIncome) +
     params.socialInsurance +
     params.idecoPersonalAnnual +
     params.smallBusinessMutualAnnual +
-    (params.spouseDeduction ? d.spouse.resident : 0) +
+    (params.spouseDeduction ? d.spouse(params.employmentIncome).resident : 0) +
     dependentDeductionTotal(params.dependents, params.year, "resident");
   const taxable = Math.max(
     0,

@@ -51,7 +51,7 @@ export function calcIncomeTax(params: {
     params.socialInsurance +
     params.idecoPersonalAnnual +
     params.smallBusinessMutualAnnual +
-    (params.spouseDeduction ? d.spouse.income : 0) +
+    (params.spouseDeduction ? d.spouse(params.employmentIncome).income : 0) +
     dependentDeductionTotal(params.dependents, params.year, "income");
   const taxable = Math.max(
     0,

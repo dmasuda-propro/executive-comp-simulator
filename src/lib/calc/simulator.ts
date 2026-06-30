@@ -5,6 +5,7 @@ import type {
   SimulationResult,
   SocialInsuranceResult,
 } from "@/types/result";
+import { getRateMaster } from "@/lib/constants/rateMaster";
 import { calcMonthlySocialInsurance } from "./socialInsurance";
 import { calcAnnualBonusSocialInsurance } from "./bonusSocialInsurance";
 import { calcEmploymentIncome } from "./salaryIncome";
@@ -219,6 +220,7 @@ export function simulateCorporateCase(input: SimulationInput): CaseResult {
     idecoPlusCompanyAnnual: ideco.companyAnnual,
     companyDeductibleExpenses: ts.companyDeductibleExpenses,
     corporateTaxRate: corporate.corporateTaxRate,
+    perCapitaTax: getRateMaster(basic.simulationYear).corporate.perCapitaTax,
   });
 
   return {

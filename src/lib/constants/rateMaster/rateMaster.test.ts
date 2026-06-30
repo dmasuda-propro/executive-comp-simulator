@@ -39,4 +39,19 @@ describe("getRateMaster", () => {
     expect(m.deductions.basicDeduction(24_000_000)).toBe(480_000);
     expect(m.deductions.basicDeduction(30_000_000)).toBe(0);
   });
+  it("配偶者控除は本人の合計所得で逓減・1,000万超で0", () => {
+    expect(m.deductions.spouse(9_000_000)).toEqual({ income: 380_000, resident: 330_000 });
+    expect(m.deductions.spouse(9_500_000)).toEqual({ income: 260_000, resident: 220_000 });
+    expect(m.deductions.spouse(10_000_000)).toEqual({ income: 130_000, resident: 110_000 });
+    expect(m.deductions.spouse(10_000_001)).toEqual({ income: 0, resident: 0 });
+  });
+  it("住民税基礎控除は43万・合計所得2,400万超で逓減", () => {
+    expect(m.residentTax.basicDeduction(24_000_000)).toBe(430_000);
+    expect(m.residentTax.basicDeduction(24_500_000)).toBe(290_000);
+    expect(m.residentTax.basicDeduction(25_000_000)).toBe(190_000);
+    expect(m.residentTax.basicDeduction(25_000_001)).toBe(0);
+  });
+  it("法人住民税 均等割が定義されている", () => {
+    expect(m.corporate.perCapitaTax).toBe(70_000);
+  });
 });

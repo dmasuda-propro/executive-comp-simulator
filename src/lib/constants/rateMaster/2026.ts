@@ -62,6 +62,23 @@ const basicDeduction = (totalIncome: number): number => {
   return 0;
 };
 
+// 住民税 基礎控除(令和8年度・43万。合計所得2,400万超で逓減)
+const residentBasicDeduction = (totalIncome: number): number => {
+  if (totalIncome <= 24_000_000) return 430_000;
+  if (totalIncome <= 24_500_000) return 290_000;
+  if (totalIncome <= 25_000_000) return 190_000;
+  return 0;
+};
+
+// 一般配偶者控除(70歳未満)。納税者本人の合計所得金額で逓減・消失
+// 出典: 国税庁 No.1191 配偶者控除
+const spouseDeduction = (taxpayerTotalIncome: number) => {
+  if (taxpayerTotalIncome <= 9_000_000) return { income: 380_000, resident: 330_000 };
+  if (taxpayerTotalIncome <= 9_500_000) return { income: 260_000, resident: 220_000 };
+  if (taxpayerTotalIncome <= 10_000_000) return { income: 130_000, resident: 110_000 };
+  return { income: 0, resident: 0 };
+};
+
 export const rateMaster2026: RateMaster = {
   year: 2026,
   socialInsurance: {
@@ -89,11 +106,13 @@ export const rateMaster2026: RateMaster = {
     ],
     reconstructionRate: 0.021,
   },
-  residentTax: { rate: 0.1, perCapita: 5_000, basicDeduction: 430_000 },
+  residentTax: { rate: 0.1, perCapita: 5_000, basicDeduction: residentBasicDeduction },
+  // 法人住民税 均等割(東京23区・資本金1000万以下・従業員50人以下の標準。赤字でも発生)
+  corporate: { perCapitaTax: 70_000 },
   deductions: {
     salaryDeduction,
     basicDeduction,
-    spouse: { income: 380_000, resident: 330_000 },
+    spouse: spouseDeduction,
     dependent: {
       general: { income: 380_000, resident: 330_000 },
       specific: { income: 630_000, resident: 450_000 },

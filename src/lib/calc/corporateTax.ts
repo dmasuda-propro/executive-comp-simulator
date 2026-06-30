@@ -8,6 +8,7 @@ export function calcCorporateTax(params: {
   idecoPlusCompanyAnnual: number;
   companyDeductibleExpenses: number;
   corporateTaxRate: number;
+  perCapitaTax?: number; // 法人住民税 均等割(赤字でも発生)
 }) {
   const profitBeforeTax = D(params.preSalaryProfit)
     .minus(params.directorSalaryAnnual)
@@ -16,9 +17,12 @@ export function calcCorporateTax(params: {
     .minus(params.idecoPlusCompanyAnnual)
     .minus(params.companyDeductibleExpenses)
     .toNumber();
-  const corporateTax = Math.floor(
+  const rateTax = Math.floor(
     D(Math.max(0, profitBeforeTax)).times(params.corporateTaxRate).toNumber(),
   );
+  const perCapita = params.perCapitaTax ?? 0;
+  // 均等割は赤字でも必ず発生する固定額。法人税等に含める。
+  const corporateTax = rateTax + perCapita;
   return {
     profitBeforeTax,
     corporateTax,

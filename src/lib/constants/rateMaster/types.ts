@@ -33,12 +33,16 @@ export type RateMaster = {
   residentTax: {
     rate: number;
     perCapita: number;
-    basicDeduction: number;
+    basicDeduction: (totalIncome: number) => number; // 住民税 基礎控除(高所得で逓減)
+  };
+  corporate: {
+    perCapitaTax: number; // 法人住民税 均等割(赤字でも発生する固定額)
   };
   deductions: {
     salaryDeduction: (salaryIncome: number) => number; // 給与所得控除
     basicDeduction: (totalIncome: number) => number; // 所得税 基礎控除(令和8年分)
-    spouse: DeductionPair; // 一般配偶者控除(70歳未満)
+    // 一般配偶者控除(70歳未満)。納税者本人の合計所得金額で逓減・消失
+    spouse: (taxpayerTotalIncome: number) => DeductionPair;
     dependent: {
       general: DeductionPair; // 一般扶養(16-18,23-69)
       specific: DeductionPair; // 特定扶養(19-22)
