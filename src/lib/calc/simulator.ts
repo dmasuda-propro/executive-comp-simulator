@@ -131,7 +131,8 @@ export function simulateEmployeeCase(input: SimulationInput): CaseResult {
     social,
     incomeTax,
     residentTax,
-    ideco: emptyIdeco,
+    // 会社員の個人iDeCo拠出額を明細表示できるよう保持(節税効果は会社員では算出しない)
+    ideco: { ...emptyIdeco, personalAnnual: idecoPersonalAnnual },
     taxSaving: emptyTaxSaving,
     cashNet,
     effectiveNet,

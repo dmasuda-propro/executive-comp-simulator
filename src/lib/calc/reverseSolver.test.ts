@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { solveDirectorSalaryForTakeHome, maxTaxSavingConfig } from "./reverseSolver";
+import {
+  solveDirectorSalaryForTakeHome,
+  maxTaxSavingConfig,
+  simulateCorporateFullTaxSaving,
+} from "./reverseSolver";
 import { simulateEmployeeCase } from "./simulator";
+import type { CaseResult } from "@/types/result";
 import type { SimulationInput } from "@/types/input";
 
 const input: SimulationInput = {
@@ -85,5 +90,42 @@ describe("solveDirectorSalaryForTakeHome (既定: 将来資産込み総資産で
   });
   it("会社の年間負担を返す", () => {
     expect(r.companyAnnualCost).toBeGreaterThan(r.annualDirectorSalary);
+  });
+});
+
+describe("手取り明細のブリッジが厳密に一致する", () => {
+  const check = (c: CaseResult) => {
+    // 額面 −(社保+所得税+住民税+小規模掛金+iDeCo個人掛金) = 現金手取り
+    expect(
+      c.salaryIncome -
+        c.social.annualEmployee -
+        c.incomeTax.total -
+        c.residentTax.total -
+        c.taxSaving.smallBusinessMutualAnnual -
+        c.ideco.personalAnnual,
+    ).toBe(c.cashNet);
+    // 現金手取り +(社宅+出張旅費+iDeCo+会社掛金) = 実質手取り
+    expect(
+      c.cashNet +
+        c.taxSaving.housingBenefit +
+        c.taxSaving.travelAllowanceAnnual +
+        c.ideco.companyAnnual,
+    ).toBe(c.effectiveNet);
+    // 実質手取り +(小規模+iDeCo個人の積立) = 将来資産込み
+    expect(
+      c.effectiveNet + c.taxSaving.smallBusinessMutualAnnual + c.ideco.personalAnnual,
+    ).toBe(c.futureAssetNet);
+  };
+  it("法人役員(節税フル活用)で各段がつながる", () => {
+    check(simulateCorporateFullTaxSaving(input));
+  });
+  it("会社員でも各段がつながる(iDeCo個人掛金を含む)", () => {
+    const withIdeco = {
+      ...input,
+      employee: { ...input.employee, employeeIdecoMonthly: 20_000 },
+    };
+    const emp = simulateEmployeeCase(withIdeco);
+    expect(emp.ideco.personalAnnual).toBe(240_000);
+    check(emp);
   });
 });

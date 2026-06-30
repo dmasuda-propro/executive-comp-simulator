@@ -1,13 +1,8 @@
 import type { CaseResult } from "@/types/result";
 import { fmtYen } from "@/lib/utils/format";
 
-type Row = {
-  label: string;
-  emp: number;
-  corp: number;
-  strong?: boolean;
-  minus?: boolean;
-};
+type Kind = "head" | "minus" | "plus" | "subtotal" | "total";
+type Row = { label: string; emp: number; corp: number; kind: Kind };
 
 export function IncomeBreakdown({
   employee,
@@ -16,15 +11,41 @@ export function IncomeBreakdown({
   employee: CaseResult;
   corporate: CaseResult;
 }) {
-  const rows: Row[] = [
-    { label: "額面（給与・役員報酬＋賞与）", emp: employee.salaryIncome, corp: corporate.salaryIncome, strong: true },
-    { label: "社会保険料（本人）", emp: employee.social.annualEmployee, corp: corporate.social.annualEmployee, minus: true },
-    { label: "所得税", emp: employee.incomeTax.total, corp: corporate.incomeTax.total, minus: true },
-    { label: "住民税", emp: employee.residentTax.total, corp: corporate.residentTax.total, minus: true },
-    { label: "現金手取り", emp: employee.cashNet, corp: corporate.cashNet, strong: true },
-    { label: "実質手取り（社宅・出張旅費・iDeCo+会社分を加算）", emp: employee.effectiveNet, corp: corporate.effectiveNet },
-    { label: "将来資産込み手取り（小規模・iDeCo個人を加算）", emp: employee.futureAssetNet, corp: corporate.futureAssetNet, strong: true },
+  const val = (c: CaseResult, f: (c: CaseResult) => number) => f(c);
+  const both = (f: (c: CaseResult) => number) => ({
+    emp: val(employee, f),
+    corp: val(corporate, f),
+  });
+
+  const allRows: Row[] = [
+    { label: "額面（給与・役員報酬＋賞与）", kind: "head", ...both((c) => c.salaryIncome) },
+    { label: "社会保険料（本人）", kind: "minus", ...both((c) => c.social.annualEmployee) },
+    { label: "所得税", kind: "minus", ...both((c) => c.incomeTax.total) },
+    { label: "住民税", kind: "minus", ...both((c) => c.residentTax.total) },
+    { label: "小規模企業共済 掛金", kind: "minus", ...both((c) => c.taxSaving.smallBusinessMutualAnnual) },
+    { label: "iDeCo 個人掛金", kind: "minus", ...both((c) => c.ideco.personalAnnual) },
+    { label: "現金手取り", kind: "subtotal", ...both((c) => c.cashNet) },
+    { label: "社宅メリット（会社負担家賃）", kind: "plus", ...both((c) => c.taxSaving.housingBenefit) },
+    { label: "出張旅費・日当", kind: "plus", ...both((c) => c.taxSaving.travelAllowanceAnnual) },
+    { label: "iDeCo+ 会社掛金", kind: "plus", ...both((c) => c.ideco.companyAnnual) },
+    { label: "実質手取り", kind: "subtotal", ...both((c) => c.effectiveNet) },
+    {
+      label: "小規模・iDeCo個人の積立（将来資産）",
+      kind: "plus",
+      ...both((c) => c.taxSaving.smallBusinessMutualAnnual + c.ideco.personalAnnual),
+    },
+    { label: "将来資産込み手取り", kind: "total", ...both((c) => c.futureAssetNet) },
   ];
+
+  // 両者とも0の加算/減算行は非表示(小計・合計・額面は常時表示)
+  const rows = allRows.filter(
+    (r) => r.kind === "head" || r.kind === "subtotal" || r.kind === "total" || r.emp !== 0 || r.corp !== 0,
+  );
+
+  const cell = (v: number, kind: Kind) => {
+    const sign = kind === "minus" ? "−" : kind === "plus" ? "＋" : "";
+    return `${sign}${fmtYen(v)}`;
+  };
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -42,28 +63,25 @@ export function IncomeBreakdown({
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr
-                key={r.label}
-                className={`border-b border-gray-100 ${r.strong ? "bg-blue-50 font-bold" : ""}`}
-              >
-                <td className="py-1.5 text-left">
-                  {r.minus && <span className="mr-0.5 text-gray-400">−</span>}
-                  {r.label}
-                </td>
-                <td className="py-1.5 text-right tabular-nums">
-                  {r.minus ? `−${fmtYen(r.emp)}` : fmtYen(r.emp)}
-                </td>
-                <td className="py-1.5 text-right tabular-nums">
-                  {r.minus ? `−${fmtYen(r.corp)}` : fmtYen(r.corp)}
-                </td>
-              </tr>
-            ))}
+            {rows.map((r) => {
+              const strong = r.kind === "subtotal" || r.kind === "total" || r.kind === "head";
+              const bg = r.kind === "total" ? "bg-blue-100" : r.kind === "subtotal" ? "bg-blue-50" : "";
+              const indent = r.kind === "minus" || r.kind === "plus" ? "pl-3" : "";
+              const valColor =
+                r.kind === "minus" ? "text-rose-600" : r.kind === "plus" ? "text-green-600" : "";
+              return (
+                <tr key={r.label} className={`border-b border-gray-100 ${bg} ${strong ? "font-bold" : ""}`}>
+                  <td className={`py-1.5 text-left ${indent}`}>{r.label}</td>
+                  <td className={`py-1.5 text-right tabular-nums ${valColor}`}>{cell(r.emp, r.kind)}</td>
+                  <td className={`py-1.5 text-right tabular-nums ${valColor}`}>{cell(r.corp, r.kind)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
       <p className="mt-2 text-[11px] text-gray-400">
-        ※ 法人税等・法人残キャッシュは下部の比較表を参照。実質手取り＝現金手取り＋非現金メリット、将来資産込み＝＋iDeCo・共済の積立。
+        ※ 額面 −（社保＋所得税＋住民税＋小規模・iDeCo個人掛金）＝現金手取り。＋社宅・出張旅費・iDeCo+会社分＝実質手取り。＋小規模・iDeCo個人の積立＝将来資産込み。法人税等・法人残は下部の比較表を参照。
       </p>
     </div>
   );
