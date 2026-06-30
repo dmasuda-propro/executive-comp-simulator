@@ -114,7 +114,7 @@ export default function SimulatorPage() {
 
               <section className="rounded-xl border border-gray-200 bg-white p-4">
                 <h2 className="mb-2 font-semibold">
-                  逆算：会社員と同じ実質手取りに必要な役員報酬（節税フル活用）
+                  採用オファー逆算：現職の総資産と同等にする役員報酬（額面比較・節税フル活用）
                 </h2>
                 <ReverseSolver />
               </section>

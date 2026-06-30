@@ -2,6 +2,11 @@ import type { SimulationInput, TaxSavingInput } from "@/types/input";
 import type { CaseResult } from "@/types/result";
 import { simulateCorporateCase, simulateEmployeeCase } from "./simulator";
 
+// 一致させる手取り/資産の指標
+export type SolveMetric = "futureAssetNet" | "effectiveNet" | "cashNet";
+
+const pick = (c: CaseResult, metric: SolveMetric): number => c[metric];
+
 // 「節税フル活用」: iDeCo+合計23,000円/月(会社22,000+個人1,000)・小規模70,000円/月を上限投入。
 // 社宅・出張旅費・経営セーフティ共済・生命保険は現在のタブ値を踏襲。
 export function maxTaxSavingConfig(base: TaxSavingInput): TaxSavingInput {
@@ -15,26 +20,33 @@ export function maxTaxSavingConfig(base: TaxSavingInput): TaxSavingInput {
 }
 
 export type ReverseSolveResult = {
-  targetEffectiveNet: number; // 会社員の実質手取り
-  monthlyDirectorSalary: number; // 逆算で必要な役員報酬(月額)
-  annualDirectorSalary: number;
-  achievedEffectiveNet: number; // その役員報酬での実質手取り(達成値)
+  metric: SolveMetric;
+  targetValue: number; // 現職(会社員)の指標値
+  employeeGrossSalary: number; // 現職の額面年収
+  monthlyDirectorSalary: number; // 提案する役員報酬(月額・額面)
+  annualDirectorSalary: number; // 提案する役員報酬(年額・額面)
+  achievedValue: number; // 提案報酬での指標値(達成値)
+  companyAnnualCost: number; // 会社の年間人件費負担(概算)
   reachedCap: boolean; // 上限でも目標に届かない
-  insufficientProfit: boolean; // 役員報酬支給前利益が足りず法人残がマイナス
-  result: CaseResult; // その役員報酬での法人ケース全体
+  insufficientProfit: boolean; // 支給前利益が足りず法人残がマイナス
+  result: CaseResult; // 提案報酬での法人ケース全体
   taxSaving: TaxSavingInput; // 使用した節税設定
 };
 
-// 会社員の実質手取りに一致する役員報酬(月額)を二分探索で逆算。
-// 実質手取りは役員報酬に対して単調増加なので確実に収束する。
+// 会社員の指標値(既定: 将来資産込み総資産)に一致する役員報酬(月額)を二分探索で逆算。
+// 指標は役員報酬に対して単調増加なので確実に収束する。
 export function solveDirectorSalaryForTakeHome(
   input: SimulationInput,
-  opts?: { maxMonthly?: number; unit?: number },
+  opts?: { metric?: SolveMetric; maxMonthly?: number; unit?: number },
 ): ReverseSolveResult {
+  const metric = opts?.metric ?? "futureAssetNet";
   const maxMonthly = opts?.maxMonthly ?? 10_000_000;
   const unit = opts?.unit ?? 1_000;
   const taxSaving = maxTaxSavingConfig(input.taxSaving);
-  const targetEffectiveNet = simulateEmployeeCase(input).effectiveNet;
+
+  const employee = simulateEmployeeCase(input);
+  const targetValue = pick(employee, metric);
+  const employeeGrossSalary = employee.salaryIncome;
 
   const trialAt = (s: number): CaseResult =>
     simulateCorporateCase({
@@ -48,39 +60,43 @@ export function solveDirectorSalaryForTakeHome(
       taxSaving,
     });
 
+  const companyCost = (c: CaseResult): number =>
+    c.salaryIncome +
+    c.social.annualCompany +
+    c.ideco.companyAnnual +
+    c.taxSaving.companyDeductibleExpenses;
+
+  const build = (
+    monthlyDirectorSalary: number,
+    result: CaseResult,
+    reachedCap: boolean,
+  ): ReverseSolveResult => ({
+    metric,
+    targetValue,
+    employeeGrossSalary,
+    monthlyDirectorSalary,
+    annualDirectorSalary: monthlyDirectorSalary * 12,
+    achievedValue: pick(result, metric),
+    companyAnnualCost: companyCost(result),
+    reachedCap,
+    insufficientProfit: (result.corporate?.remainingCash ?? 0) < 0,
+    result,
+    taxSaving,
+  });
+
   const atMax = trialAt(maxMonthly);
-  if (atMax.effectiveNet < targetEffectiveNet) {
-    return {
-      targetEffectiveNet,
-      monthlyDirectorSalary: maxMonthly,
-      annualDirectorSalary: maxMonthly * 12,
-      achievedEffectiveNet: atMax.effectiveNet,
-      reachedCap: true,
-      insufficientProfit: (atMax.corporate?.remainingCash ?? 0) < 0,
-      result: atMax,
-      taxSaving,
-    };
+  if (pick(atMax, metric) < targetValue) {
+    return build(maxMonthly, atMax, true);
   }
 
   let lo = 0;
   let hi = maxMonthly;
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2;
-    if (trialAt(mid).effectiveNet < targetEffectiveNet) lo = mid;
+    if (pick(trialAt(mid), metric) < targetValue) lo = mid;
     else hi = mid;
   }
-  // 役員報酬は実務上の単位に切り上げ(達成手取り >= 目標 になるように)
+  // 役員報酬は実務上の単位に切り上げ(達成値 >= 目標 になるように)
   const monthlyDirectorSalary = Math.ceil(hi / unit) * unit;
-  const result = trialAt(monthlyDirectorSalary);
-
-  return {
-    targetEffectiveNet,
-    monthlyDirectorSalary,
-    annualDirectorSalary: monthlyDirectorSalary * 12,
-    achievedEffectiveNet: result.effectiveNet,
-    reachedCap: false,
-    insufficientProfit: (result.corporate?.remainingCash ?? 0) < 0,
-    result,
-    taxSaving,
-  };
+  return build(monthlyDirectorSalary, trialAt(monthlyDirectorSalary), false);
 }

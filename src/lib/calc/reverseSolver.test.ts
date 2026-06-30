@@ -57,22 +57,29 @@ describe("maxTaxSavingConfig", () => {
   });
 });
 
-describe("solveDirectorSalaryForTakeHome", () => {
+describe("solveDirectorSalaryForTakeHome (既定: 将来資産込み総資産で一致)", () => {
   const r = solveDirectorSalaryForTakeHome(input);
-  it("目標は会社員の実質手取り", () => {
-    expect(r.targetEffectiveNet).toBe(simulateEmployeeCase(input).effectiveNet);
+  it("目標は会社員の将来資産込み総資産", () => {
+    expect(r.metric).toBe("futureAssetNet");
+    expect(r.targetValue).toBe(simulateEmployeeCase(input).futureAssetNet);
   });
-  it("達成手取りは目標以上で、ごく僅差", () => {
-    expect(r.achievedEffectiveNet).toBeGreaterThanOrEqual(r.targetEffectiveNet);
-    expect(r.achievedEffectiveNet - r.targetEffectiveNet).toBeLessThan(30_000);
+  it("現職の額面年収を返す", () => {
+    expect(r.employeeGrossSalary).toBe(simulateEmployeeCase(input).salaryIncome);
+  });
+  it("達成値は目標以上で、ごく僅差", () => {
+    expect(r.achievedValue).toBeGreaterThanOrEqual(r.targetValue);
+    expect(r.achievedValue - r.targetValue).toBeLessThan(30_000);
   });
   it("役員報酬は正で1,000円単位", () => {
     expect(r.monthlyDirectorSalary).toBeGreaterThan(0);
     expect(r.monthlyDirectorSalary % 1000).toBe(0);
     expect(r.annualDirectorSalary).toBe(r.monthlyDirectorSalary * 12);
   });
-  it("同じ実質手取りでも将来資産(小規模+iDeCo)が大きく積み上がる", () => {
-    // 実質手取りは目標に一致する一方、futureAssetNetは小規模840k+iDeCo個人12kぶん大きい
-    expect(r.result.futureAssetNet).toBeGreaterThan(r.targetEffectiveNet + 800_000);
+  it("将来資産込み基準では節税フル活用が役員報酬を額面より抑える", () => {
+    // 節税の税減効果と非現金便益で、現職額面より低い役員報酬で同等の総資産に届く
+    expect(r.annualDirectorSalary).toBeLessThan(r.employeeGrossSalary);
+  });
+  it("会社の年間負担を返す", () => {
+    expect(r.companyAnnualCost).toBeGreaterThan(r.annualDirectorSalary);
   });
 });
