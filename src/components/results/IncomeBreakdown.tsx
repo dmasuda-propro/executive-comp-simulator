@@ -27,14 +27,9 @@ export function IncomeBreakdown({
     { label: "現金手取り", kind: "subtotal", ...both((c) => c.cashNet) },
     { label: "社宅メリット（会社負担家賃）", kind: "plus", ...both((c) => c.taxSaving.housingBenefit) },
     { label: "出張旅費・日当", kind: "plus", ...both((c) => c.taxSaving.travelAllowanceAnnual) },
-    { label: "iDeCo+ 会社掛金", kind: "plus", ...both((c) => c.ideco.companyAnnual) },
-    { label: "実質手取り", kind: "subtotal", ...both((c) => c.effectiveNet) },
-    {
-      label: "小規模・iDeCo個人の積立（将来資産）",
-      kind: "plus",
-      ...both((c) => c.taxSaving.smallBusinessMutualAnnual + c.ideco.personalAnnual),
-    },
-    { label: "将来資産込み手取り", kind: "total", ...both((c) => c.futureAssetNet) },
+    { label: "小規模企業共済（将来資産）", kind: "plus", ...both((c) => c.taxSaving.smallBusinessMutualAnnual) },
+    { label: "iDeCo＋（会社＋個人の積立）", kind: "plus", ...both((c) => c.ideco.companyAnnual + c.ideco.personalAnnual) },
+    { label: "将来資産込み総資産", kind: "total", ...both((c) => c.futureAssetNet) },
   ];
 
   // 両者とも0の加算/減算行は非表示(小計・合計・額面は常時表示)
@@ -81,7 +76,7 @@ export function IncomeBreakdown({
         </table>
       </div>
       <p className="mt-2 text-[11px] text-gray-400">
-        ※ 額面 −（社保＋所得税＋住民税＋小規模・iDeCo個人掛金）＝現金手取り。＋社宅・出張旅費・iDeCo+会社分＝実質手取り。＋小規模・iDeCo個人の積立＝将来資産込み。法人税等・法人残は下部の比較表を参照。
+        ※ 額面 −（社保＋所得税＋住民税＋小規模・iDeCo個人掛金）＝現金手取り。現金手取り ＋（社宅・出張旅費＋小規模企業共済＋iDeCo＋）＝将来資産込み総資産。小規模・iDeCoは現金から拠出され将来資産として戻ります。法人税等・法人残は下部の比較表を参照。
       </p>
     </div>
   );

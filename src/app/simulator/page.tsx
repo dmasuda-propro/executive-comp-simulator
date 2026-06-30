@@ -22,8 +22,7 @@ import { Disclaimer } from "@/components/Disclaimer";
 const TABS = [
   { key: "basic", label: "基本情報" },
   { key: "employee", label: "会社員" },
-  { key: "corporate", label: "法人" },
-  { key: "taxSaving", label: "節税施策" },
+  { key: "corporate", label: "法人・節税策" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -88,8 +87,12 @@ export default function SimulatorPage() {
             </div>
             {tab === "basic" && <BasicInfoForm />}
             {tab === "employee" && <EmployeeForm />}
-            {tab === "corporate" && <CorporateForm />}
-            {tab === "taxSaving" && <TaxSavingForm />}
+            {tab === "corporate" && (
+              <div className="space-y-4">
+                <CorporateForm />
+                <TaxSavingForm />
+              </div>
+            )}
             <button
               onClick={reset}
               className="mt-3 w-full rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"

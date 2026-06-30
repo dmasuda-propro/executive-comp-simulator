@@ -115,6 +115,15 @@ describe("手取り明細のブリッジが厳密に一致する", () => {
     expect(
       c.effectiveNet + c.taxSaving.smallBusinessMutualAnnual + c.ideco.personalAnnual,
     ).toBe(c.futureAssetNet);
+    // 明細表示: 現金手取り +(社宅+旅費+小規模+iDeCo会社+iDeCo個人) = 将来資産込み総資産
+    expect(
+      c.cashNet +
+        c.taxSaving.housingBenefit +
+        c.taxSaving.travelAllowanceAnnual +
+        c.taxSaving.smallBusinessMutualAnnual +
+        c.ideco.companyAnnual +
+        c.ideco.personalAnnual,
+    ).toBe(c.futureAssetNet);
   };
   it("法人役員(節税フル活用)で各段がつながる", () => {
     check(simulateCorporateFullTaxSaving(input));
