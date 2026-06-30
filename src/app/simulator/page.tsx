@@ -10,6 +10,7 @@ import { CompanyCostComparison } from "@/components/results/CompanyCostCompariso
 import { BasicInfoForm } from "@/components/forms/BasicInfoForm";
 import { EmployeeForm } from "@/components/forms/EmployeeForm";
 import { CorporateForm } from "@/components/forms/CorporateForm";
+import { DirectorPayForm } from "@/components/forms/DirectorPayForm";
 import { TaxSavingForm } from "@/components/forms/TaxSavingForm";
 import { SummaryCards } from "@/components/results/SummaryCards";
 import { ComparisonTable } from "@/components/results/ComparisonTable";
@@ -23,7 +24,8 @@ import { Disclaimer } from "@/components/Disclaimer";
 const TABS = [
   { key: "basic", label: "基本情報" },
   { key: "employee", label: "会社員" },
-  { key: "corporate", label: "法人・節税策" },
+  { key: "corporate", label: "法人" },
+  { key: "director", label: "役員報酬" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -88,9 +90,10 @@ export default function SimulatorPage() {
             </div>
             {tab === "basic" && <BasicInfoForm />}
             {tab === "employee" && <EmployeeForm />}
-            {tab === "corporate" && (
+            {tab === "corporate" && <CorporateForm />}
+            {tab === "director" && (
               <div className="space-y-4">
-                <CorporateForm />
+                <DirectorPayForm />
                 <TaxSavingForm />
               </div>
             )}
