@@ -24,6 +24,7 @@ type TabKey = (typeof TABS)[number]["key"];
 export default function SimulatorPage() {
   const { input, reset } = useSimStore();
   const [tab, setTab] = useState<TabKey>("basic");
+  const [showCompanyCost, setShowCompanyCost] = useState(true);
   // localStorageから復元した入力でSSRと不整合が出ないよう、ハイドレーション後に描画
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
@@ -107,7 +108,18 @@ export default function SimulatorPage() {
           {result && corpFull && (
             <>
               <IncomeBreakdown employee={result.employee} corporate={corpFull} />
-              <CompanyCostComparison employee={result.employee} corporate={corpFull} />
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={showCompanyCost}
+                  onChange={(e) => setShowCompanyCost(e.target.checked)}
+                />
+                会社の支出比較を表示
+              </label>
+              {showCompanyCost && (
+                <CompanyCostComparison employee={result.employee} corporate={corpFull} />
+              )}
             </>
           )}
           <Disclaimer />
