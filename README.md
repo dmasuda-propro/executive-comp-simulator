@@ -1,5 +1,9 @@
 # 役員報酬・会社員比較シミュレーター
 
+**公開URL（GitHub Pages）**: https://dmasuda-propro.github.io/executive-comp-simulator/
+
+`main` ブランチへ push すると `.github/workflows/deploy.yml` が静的エクスポート（`output: "export"`）をビルドし、GitHub Pages へ自動デプロイします。
+
 会社員として働く場合と、法人化して役員報酬・節税施策（iDeCo+・小規模企業共済・社宅概算・出張旅費概算）を使う場合の **手取り / 実質手取り / 法人残キャッシュ / 個人＋法人合計 / 各税負担 / 会社員との差額** を概算比較する Web シミュレーターです。最適化モードでは役員報酬・賞与を総当たりして合計キャッシュ上位 20 パターンを表示します。
 
 ## 技術構成
